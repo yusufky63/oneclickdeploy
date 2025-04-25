@@ -2,7 +2,6 @@
 
 import { ConnectKitButton } from "connectkit";
 import { Button } from "@/components/ui/button";
-import { useAccount } from "wagmi";
 import { Wallet } from "lucide-react";
 
 interface ConnectButtonProps {
@@ -10,7 +9,6 @@ interface ConnectButtonProps {
 }
 
 export function ConnectButton({ className = "" }: ConnectButtonProps) {
-  const { isConnected } = useAccount();
 
   return (
     <ConnectKitButton.Custom>

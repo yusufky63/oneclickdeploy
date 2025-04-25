@@ -1,11 +1,20 @@
 import React from 'react';
 import { Check, Search, X } from 'lucide-react';
+import Image from 'next/image';
 
 interface ChainData {
   id: number;
   name: string;
   imageUrl?: string;
   chainId?: number;
+}
+
+interface ChainInfo {
+  chainId: number;
+  isPopular?: boolean;
+  isSuperchain?: boolean;
+  isMainnet?: boolean;
+  [key: string]: unknown;
 }
 
 interface NetworkSelectorProps {
@@ -18,7 +27,7 @@ interface NetworkSelectorProps {
   activeNetworkTab: string;
   setActiveNetworkTab: (tab: string) => void;
   handleChainChange: (chainId: number) => void;
-  chains: any[]; // You might want to type this properly
+  chains: ChainInfo[]; // Replaced any[] with ChainInfo[]
 }
 
 const NetworkSelector: React.FC<NetworkSelectorProps> = ({
@@ -127,10 +136,12 @@ const NetworkSelector: React.FC<NetworkSelectorProps> = ({
                         {chain.imageUrl ? (
                           <>
                             <div className="absolute -inset-0.5 bg-indigo-500/20 blur-sm rounded-full"></div>
-                            <img
+                            <Image
                               src={chain.imageUrl}
                               alt={chain.name}
-                              className="relative w-10 h-10 rounded-full border border-indigo-500/30"
+                              width={40}
+                              height={40}
+                              className="relative rounded-full border border-indigo-500/30"
                             />
                           </>
                         ) : (
@@ -190,10 +201,12 @@ const NetworkSelector: React.FC<NetworkSelectorProps> = ({
                         {chain.imageUrl ? (
                           <>
                             <div className="absolute -inset-0.5 bg-indigo-500/20 blur-sm rounded-full"></div>
-                            <img
+                            <Image
                               src={chain.imageUrl}
                               alt={chain.name}
-                              className="relative w-10 h-10 rounded-full border border-indigo-500/30"
+                              width={40}
+                              height={40}
+                              className="relative rounded-full border border-indigo-500/30"
                             />
                           </>
                         ) : (
@@ -255,10 +268,12 @@ const NetworkSelector: React.FC<NetworkSelectorProps> = ({
                         {chain.imageUrl ? (
                           <>
                             <div className="absolute -inset-0.5 bg-indigo-500/20 blur-sm rounded-full"></div>
-                            <img
+                            <Image
                               src={chain.imageUrl}
                               alt={chain.name}
-                              className="relative w-10 h-10 rounded-full border border-indigo-500/30"
+                              width={40}
+                              height={40}
+                              className="relative rounded-full border border-indigo-500/30"
                             />
                           </>
                         ) : (
@@ -318,10 +333,12 @@ const NetworkSelector: React.FC<NetworkSelectorProps> = ({
                         {chain.imageUrl ? (
                           <>
                             <div className="absolute -inset-0.5 bg-indigo-500/20 blur-sm rounded-full"></div>
-                            <img
+                            <Image
                               src={chain.imageUrl}
                               alt={chain.name}
-                              className="relative w-10 h-10 rounded-full border border-indigo-500/30"
+                              width={40}
+                              height={40}
+                              className="relative rounded-full border border-indigo-500/30"
                             />
                           </>
                         ) : (

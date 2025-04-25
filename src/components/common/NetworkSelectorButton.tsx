@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 interface ChainData {
   id: number;
@@ -54,9 +55,11 @@ const NetworkSelectorButton: React.FC<NetworkSelectorButtonProps> = ({
               {availableChains.find(c => c.id === selectedChainId)?.imageUrl ? (
                 <div className="relative">
                   <div className="absolute -inset-0.5 bg-indigo-500/30 blur-sm rounded-full"></div>
-                  <img
-                    src={availableChains.find(c => c.id === selectedChainId)?.imageUrl}
+                  <Image
+                    src={availableChains.find(c => c.id === selectedChainId)?.imageUrl || ""}
                     alt=""
+                    width={24}
+                    height={24}
                     className="relative w-6 h-6 mr-3 rounded-full ring-1 ring-indigo-500/50"
                   />
                 </div>
@@ -122,10 +125,12 @@ const NetworkSelectorButton: React.FC<NetworkSelectorButtonProps> = ({
                   {chain.imageUrl ? (
                     <>
                       <div className="absolute -inset-1 bg-indigo-500/20 blur-sm rounded-full"></div>
-                      <img
+                      <Image
                         src={chain.imageUrl}
                         alt={chain.name}
-                        className="relative w-8 h-8 rounded-full border border-indigo-500/30"
+                        width={32}
+                        height={32}
+                        className="relative rounded-full border border-indigo-500/30"
                       />
                     </>
                   ) : (

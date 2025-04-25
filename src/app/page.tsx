@@ -156,6 +156,7 @@ export default function Home() {
       // If wallet is connected but no chain is selected, use the wallet's chain
       setSelectedChainId(config.state.chainId);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [walletIsConnected, config?.state?.chainId, selectedChainId, switchChain]);
 
   // Log current configuration
