@@ -50,7 +50,7 @@ export default function DeploymentCounter() {
   // Show loading state
   if (isLoading) {
     return (
-      <div className="flex items-center gap-1 px-2 py-1 rounded-lg border border-indigo-500/20 bg-indigo-600/5">
+      <div className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-indigo-500/30 bg-indigo-600/10">
         <div className="w-3 h-3 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin"></div>
       </div>
     );
@@ -62,9 +62,9 @@ export default function DeploymentCounter() {
   }
 
   return (
-    <Link href="/deployment-stats" className="flex items-center gap-1 px-2 py-1 rounded-lg border border-indigo-500/20 bg-indigo-600/5 hover:bg-indigo-600/10 text-indigo-400 hover:text-indigo-300 transition-colors">
-      <BarChart className="w-5 h-5" />
-      <span className="text-xs font-medium">{count.toLocaleString()}</span>
+    <Link href="/deployment-stats" className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-indigo-500/30 bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-300 hover:text-indigo-200 transition-colors">
+      <BarChart className="w-3 h-3 sm:w-4 sm:h-4" />
+      <span className="text-xs sm:text-sm font-medium">{count.toLocaleString()}</span>
     </Link>
   );
 } 

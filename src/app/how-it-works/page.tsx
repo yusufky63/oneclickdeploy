@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { ArrowLeft, Copy } from "lucide-react";
-import GridBackground from "@/components/common/Grid-Background";
+import GridBackground from "@/components/ui/Grid-Background";
 
 // Sample code blocks
 const contractSamples = {

@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 contract SimpleNFT {
     string public name;
     string public symbol;
-    string public baseURI;
     uint256 public maxSupply;
     uint256 public totalSupply;
     
@@ -12,8 +11,7 @@ contract SimpleNFT {
     
     constructor(
         string memory _name, 
-        string memory _symbol, 
-        string memory _baseURI, 
+        string memory _symbol,
         uint256 _maxSupply, 
         address payable _feeReceiver,
         bool _feeRequired,
@@ -21,7 +19,6 @@ contract SimpleNFT {
     ) payable {
         name = _name;
         symbol = _symbol;
-        baseURI = _baseURI;
         maxSupply = _maxSupply;
         totalSupply = 0;
         
@@ -32,6 +29,9 @@ contract SimpleNFT {
             (bool success, ) = _feeReceiver.call{value: msg.value}("");
             require(success, "Fee transfer failed");
         }
+        
+        // Auto mint one token to contract deployer
+        mint();
     }
     
     function mint() public {

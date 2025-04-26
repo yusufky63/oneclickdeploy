@@ -1,19 +1,20 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { WalletProvider } from "@/providers/WalletProvider";
+import BannerWrapper from "@/components/common/Banner/BannerWrapper";
 
 // Font optimization with preloading
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
   preload: true,
   fallback: ['system-ui', 'sans-serif'],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
   subsets: ["latin"],
   display: "swap",
   preload: true,
@@ -23,15 +24,15 @@ const geistMono = Geist_Mono({
 // Advanced metadata for better SEO
 export const metadata: Metadata = {
   title: "OneClickDeploy | Modern Smart Contract Deployment",
-  description: "Deploy ERC-20 tokens and NFT collections in seconds with no coding required. The easiest way to launch your web3 project.",
-  keywords: ["blockchain", "smart contracts", "web3", "deploy", "ethereum", "tokens", "NFT", "DeFi", "cryptocurrency"],
+  description: "Deploy ERC-20 tokens and NFT collections in seconds with no coding required.",
+  keywords: ["blockchain", "smart contracts", "web3", "deploy", "ethereum", "tokens", "NFT", "cryptocurrency"],
   authors: [{ name: "OneClickDeploy Team" }],
   creator: "OneClickDeploy",
   publisher: "OneClickDeploy",
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://OneClickDeploy.app",
+    url: "https://OneClickDeploy.xyz",
     title: "OneClickDeploy | Modern Smart Contract Deployment",
     description: "Deploy tokens and NFTs with no coding required",
     siteName: "OneClickDeploy",
@@ -46,10 +47,10 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "OneClickDeploy | Modern Smart Contract Deployment",
     description: "Deploy tokens and NFTs with no coding required",
-    creator: "@OneClickDeploy",
+    creator: "@1ClickDeployer",
     images: ["/twitter-image.png"], // You'll need to add this image to your public folder
   },
-  metadataBase: new URL("https://OneClickDeploy.app"),
+  metadataBase: new URL("https://oneclickdeploy.xyz"),
 };
 
 // Viewport settings for better mobile experience
@@ -77,17 +78,23 @@ export default function RootLayout({
         <meta name="theme-color" content="#312e81" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gradient-to-br from-black to-indigo-950 text-white min-h-screen overflow-x-hidden font-sans`}
+        className={`${inter.variable} ${spaceGrotesk.variable} antialiased bg-gradient-to-br from-black to-indigo-950 text-white min-h-screen overflow-x-hidden font-sans`}
+        suppressHydrationWarning
       >
-        <div className="fixed inset-0 bg-[url('/grid.svg')] bg-center opacity-10 pointer-events-none z-0" />
-        <div className="fixed top-0 left-[-20%] w-[60%] h-[30%] rounded-full bg-indigo-600/5 blur-3xl pointer-events-none z-0" aria-hidden="true" />
-        <div className="fixed bottom-0 right-[-20%] w-[60%] h-[30%] rounded-full bg-indigo-600/5 blur-3xl pointer-events-none z-0" aria-hidden="true" />
+        <BannerWrapper />
         
-        <WalletProvider>
-          <main className="relative z-10">
-        {children}
-          </main>
-        </WalletProvider>
+        {/* Ana içerik - Mobilde dikey banner için daha fazla boşluk */}
+        <div className="pt-20 sm:pt-14"> {/* Mobilde daha fazla, masaüstünde normal boşluk */}
+          <div className="fixed inset-0 bg-[url('/grid.svg')] bg-center opacity-10 pointer-events-none z-0" />
+          <div className="fixed top-0 left-[-20%] w-[60%] h-[30%] rounded-full bg-indigo-600/5 blur-3xl pointer-events-none z-0" aria-hidden="true" />
+          <div className="fixed bottom-0 right-[-20%] w-[60%] h-[30%] rounded-full bg-indigo-600/5 blur-3xl pointer-events-none z-0" aria-hidden="true" />
+          
+          <WalletProvider>
+            <main className="relative z-10">
+              {children}
+            </main>
+          </WalletProvider>
+        </div>
       </body>
     </html>
   );

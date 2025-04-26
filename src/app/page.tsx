@@ -11,16 +11,8 @@ import {
 import { SimpleTokenABI, SimpleTokenBytecode } from "@/contracts/SimpleToken";
 import { SimpleNFTABI, SimpleNFTBytecode } from "@/contracts/SimpleNFT";
 import { DeploymentState } from "@/types/contracts";
-import {
-  Check,
-  Twitter,
-  Copy,
-  ExternalLink,
-  Clock,
-  X,
-  BarChart,
-} from "lucide-react";
-import GridBackground from "@/components/common/Grid-Background";
+import { Twitter, ExternalLink, Clock, BarChart } from "lucide-react";
+import GridBackground from "@/components/ui/Grid-Background";
 import { ConnectButton } from "@/components/common/ConnectButton";
 import NetworkSelector from "@/components/common/NetworkSelector";
 import NetworkSelectorButton from "@/components/common/NetworkSelectorButton";
@@ -30,6 +22,12 @@ import Image from "next/image";
 import { incrementDeploymentCount } from "@/lib/supabase";
 import DeploymentCounter from "@/components/common/DeploymentCounter";
 import Link from "next/link";
+import SuccessModal from "@/components/common/SuccessModal";
+import TabSelector from "@/components/common/TabSelector";
+import SimpleContractForm from "@/components/forms/SimpleContractForm";
+import TokenContractForm from "@/components/forms/TokenContractForm";
+import NFTContractForm from "@/components/forms/NFTContractForm";
+import ChainInfoBar from "@/components/common/ChainInfoBar";
 
 interface DeploymentRecord {
   chainId: number;
@@ -51,55 +49,51 @@ export default function Home() {
     }>
   >([]);
 
-  // Simple Contract Form Data
-  const [simpleContractFormData, setSimpleContractFormData] = useState({
-    name: "",
-    symbol: "",
-  });
-
-  // Token Contract Form Data
-  const [tokenContractFormData, setTokenContractFormData] = useState({
-    name: "",
-    symbol: "",
-    initialSupply: "1000000",
-  });
-
-  // NFT Contract Form Data
-  const [nftContractFormData, setNftContractFormData] = useState({
-    name: "",
-    symbol: "",
-    baseURI: "https://api.example.com/metadata/",
+  // Form state'lerini birleştir (Simple Contract form alanı kaldırıldı)
+  const [contractFormData, setContractFormData] = useState({
+    // Simple Contract form verileri
+    simple: {
+      name: "",
+      message: "",
+    },
+    // Token Contract form verileri
+    token: {
+      name: "",
+      symbol: "",
+      initialSupply: "1000000",
+    },
+    // NFT Contract form verileri
+    nft: {
+      name: "",
+      symbol: "",
+      maxSupply: "100",
+    },
   });
 
   // Varsayılan değerler tanımla
   const defaultValues = {
     simple: {
-      name: "Simple Demo Contract",
-      symbol: "SDC",
+      name: "My Simple Contract",
+      message: "Hello, Blockchain!",
     },
     token: {
-      name: "My Token",
-      symbol: "MTK",
+      name: "OneClickDeploy Token",
+      symbol: "OCDT",
       initialSupply: "1000000", // 1 milyon token
     },
     nft: {
-      name: "My NFT Collection",
-      symbol: "MNFT",
-      baseURI: "https://api.example.com/metadata/",
+      name: "OneClickDeploy NFT Collection",
+      symbol: "OCDNFT",
+      maxSupply: "100",
     },
   };
 
   // Varsayılan değerleri uygulama fonksiyonları
-  const useSimpleContractDefaults = () => {
-    setSimpleContractFormData(defaultValues.simple);
-  };
-
-  const useTokenContractDefaults = () => {
-    setTokenContractFormData(defaultValues.token);
-  };
-
-  const useNFTContractDefaults = () => {
-    setNftContractFormData(defaultValues.nft);
+  const applyDefaultValues = (type: "simple" | "token" | "nft") => {
+    setContractFormData((prev) => ({
+      ...prev,
+      [type]: defaultValues[type],
+    }));
   };
 
   // Deployment State
@@ -112,7 +106,42 @@ export default function Home() {
   });
 
   // Wagmi hooks for wallet and network
-  const { address, isConnected: walletIsConnected } = useAccount();
+  const { address, isConnected: wagmiIsConnected } = useAccount();
+
+  // Added additional verification to ensure wallet connection status is consistent
+  // WalletConnect hatası nedeniyle geçici çözüm: Adres varsa bağlı kabul et
+  const walletIsConnected =
+    (wagmiIsConnected || !!address) &&
+    typeof window !== "undefined" &&
+    !!window.ethereum;
+
+  // Log wallet status for debugging
+  useEffect(() => {
+    const hasProvider = typeof window !== "undefined" && !!window.ethereum;
+
+    console.log("Wallet connection status:", {
+      wagmiIsConnected,
+      address,
+      walletIsConnected,
+      hasProvider,
+      isWindowEthereumUndefined:
+        typeof window !== "undefined" && typeof window.ethereum === "undefined",
+    });
+
+    // Try to reload provider if it's not detected
+    if (wagmiIsConnected && !hasProvider && typeof window !== "undefined") {
+      console.log(
+        "Provider not detected despite wallet being connected. Attempting to refresh connection."
+      );
+
+      // Force re-connection if provider is missing but wallet claims to be connected
+      if (window.ethereum === undefined) {
+        console.log(
+          "window.ethereum is undefined despite connection. This may be a wallet extension issue."
+        );
+      }
+    }
+  }, [wagmiIsConnected, address, walletIsConnected]);
 
   const config = useConfig();
   const { switchChain } = useSwitchChain();
@@ -147,43 +176,50 @@ export default function Home() {
     }
   }, [walletIsConnected, deploymentState.error]);
 
-  // Handle chain selection
-  const handleChainChange = async (chainId: number) => {
-    setSelectedChainId(chainId);
-
-    // Always try to switch the wallet's network to match the selected chain
-    if (walletIsConnected) {
-      try {
-        console.log(`Switching wallet to chain ID: ${chainId}`);
-        await switchChain({ chainId });
-        console.log("Chain switched successfully");
-      } catch (error) {
-        console.error("Error switching chain:", error);
-        // Still update the UI selection even if wallet switch fails
-        // This allows users to see their selection and try again
-      }
-    }
-  };
-
   // Auto-switch network when wallet connects or changes network
   useEffect(() => {
-    // If we have a selected chain and the wallet is connected but on a different chain
-    if (
-      selectedChainId &&
-      walletIsConnected &&
-      config?.state?.chainId !== selectedChainId
-    ) {
-      handleChainChange(selectedChainId);
-    } else if (
-      walletIsConnected &&
-      config?.state?.chainId &&
-      !selectedChainId
-    ) {
-      // If wallet is connected but no chain is selected, use the wallet's chain
+    // Ağ otomatik değişikliği devre dışı bırakıldı
+    // Kullanıcı sadece bağlandığında veya manuel ağ değişikliği yaptığında çalışacak
+
+    // Ağ değişikliği olayını dinle ve state'i uygun şekilde güncelle
+    const handleChainChangedEvent = (event: Event) => {
+      const customEvent = event as CustomEvent<{ chainId: number; userInitiated?: boolean }>;
+      console.log("Ağ değişikliği yakalandı:", customEvent.detail.chainId);
+
+      // Kullanıcı tarafından başlatılan bir ağ değişikliği ise veya ilk bağlantı ise
+      if (customEvent.detail.userInitiated) {
+        console.log("Kullanıcı tarafından başlatılan ağ değişikliği");
+        // Yeni ağ ID'sini state'e yansıt
+        setSelectedChainId(customEvent.detail.chainId);
+
+        // Geçici çözüm: Cüzdan bağlantı state'ini temizle
+        // Bu, bağlantı sorunlarını önlemeye yardımcı olur
+        setDeploymentState((prev) => ({
+          ...prev,
+          error: null,
+        }));
+      }
+    };
+
+    // Event listener ekle
+    if (typeof window !== "undefined") {
+      document.addEventListener("chainChanged", handleChainChangedEvent);
+
+      // Cleanup
+      return () => {
+        document.removeEventListener("chainChanged", handleChainChangedEvent);
+      };
+    }
+  }, []);
+
+  // Seperate effect to handle wallet connection
+  useEffect(() => {
+    // Cüzdan ilk kez bağlandığında, ağı otomatik değiştirmeden cüzdan ağını seçili olarak ayarla
+    if (walletIsConnected && config?.state?.chainId && !selectedChainId) {
+      console.log("Cüzdan bağlı ve ağ seçili değil, cüzdan ağını kullan:", config.state.chainId);
       setSelectedChainId(config.state.chainId);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [walletIsConnected, config?.state?.chainId, selectedChainId, switchChain]);
+  }, [walletIsConnected, config?.state?.chainId, selectedChainId]);
 
   // Log current configuration
   console.log("Wallet status:", {
@@ -258,12 +294,6 @@ export default function Home() {
     chainName: string,
     contractType: string
   ) => {
-    // Shorten the contract address for better readability
-    const shortAddress = `${contractAddress.slice(
-      0,
-      6
-    )}...${contractAddress.slice(-4)}`;
-
     // Create a more engaging message with emojis and call-to-action
     const text = `🚀 Just deployed a ${contractType} on ${chainName} in seconds using @OneClickDeployer! 
     
@@ -272,7 +302,7 @@ export default function Home() {
 
 Try it yourself at oneclickdeploy.xyz
 
-Contract: ${shortAddress}`;
+Contract: ${contractAddress}`;
 
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
       text
@@ -298,69 +328,75 @@ Contract: ${shortAddress}`;
   };
 
   const handleDeployContract = async () => {
-    try {
-      if (!walletIsConnected) {
-        console.log("Wallet not connected");
-        // Set an error in deployment state to show in UI
+    // Enhanced wallet connection check using all available signals
+    const isWalletReady =
+      walletIsConnected &&
+      !!address &&
+      typeof window !== "undefined" &&
+      !!window.ethereum;
+
+    if (!isWalletReady) {
+      console.log("Wallet not connected or ready");
+      let errorMessage = "Please connect your wallet first";
+
+      // Check if provider is missing despite wallet claiming to be connected
+      if (
+        wagmiIsConnected &&
+        (!window.ethereum || typeof window.ethereum === "undefined")
+      ) {
+        errorMessage =
+          "Could not detect Ethereum provider, please refresh the page";
+      }
+
       setDeploymentState((prev) => ({
         ...prev,
-          error: "Please connect your wallet first",
-        }));
+        error: errorMessage,
+      }));
 
-        // Find and click the ConnectButton
-        setTimeout(() => {
-          // Try to find the ConnectKitButton
-          const connectKitButton = document.querySelector(
-            "[data-connectkit-button]"
-          );
-          if (connectKitButton instanceof HTMLElement) {
-            connectKitButton.click();
-            console.log("ConnectKit button clicked");
+      // Only open connect modal if not connected at all
+      if (!wagmiIsConnected && !address) {
+        // Use the same approach as in NetworkSelectorButton
+        if (typeof window !== "undefined") {
+          // Try to access connectKit global
+          if (
+            window.connectKit &&
+            typeof window.connectKit.openConnectModal === "function"
+          ) {
+            window.connectKit.openConnectModal();
           } else {
-            // Try various other selectors as fallbacks
-            const buttonSelectors = [
-              "button[variant='ghost']",
-              ".flex.items-center.gap-2.text-indigo-400",
-              "button:has(svg.w-4.h-4)",
-              "button",
-            ];
-
-            for (const selector of buttonSelectors) {
-              try {
-                const button = document.querySelector(selector);
-                if (button instanceof HTMLElement) {
-                  button.click();
-                  console.log(
-                    `Found and clicked button with selector: ${selector}`
-                  );
-                  break;
-                }
-              } catch (e) {
-                console.log(`Error with selector ${selector}:`, e);
-              }
+            // Fallback to clicking the connect button
+            const connectKitButton = document.querySelector(
+              "[data-connectkit-button]"
+            );
+            if (connectKitButton instanceof HTMLElement) {
+              connectKitButton.click();
             }
           }
-        }, 100);
+        }
+      }
+
+      // Return early to prevent network modal from opening
       return;
     }
 
-      // Set loading state at the beginning of deployment
-      setDeploymentState((prev) => ({
-        ...prev,
-        isDeploying: true,
-        error: null,
-      }));
+    // Set loading state at the beginning of deployment
+    setDeploymentState((prev) => ({
+      ...prev,
+      isDeploying: true,
+      error: null,
+    }));
 
-      // Properly type the ethereum object
-      if (!window.ethereum) {
-        console.log("Ethereum provider not available");
-      setDeploymentState((prev) => ({
-        ...prev,
-        isDeploying: false,
-          error: "Ethereum provider not available",
-      }));
-      return;
-    }
+    try {
+      // Ensure ethereum provider is available and ready
+      if (!window.ethereum || !window.ethereum.isConnected()) {
+        console.log("Ethereum provider not available or not connected");
+        setDeploymentState((prev) => ({
+          ...prev,
+          isDeploying: false,
+          error: "Ethereum provider not available or disconnected",
+        }));
+        return;
+      }
 
       const provider = new ethers.BrowserProvider(
         window.ethereum as ethers.Eip1193Provider
@@ -373,8 +409,8 @@ Contract: ${shortAddress}`;
         !chains.find((c) => c.chainId === selectedChainId)
       ) {
         console.log("No valid chain selected");
-      return;
-    }
+        return;
+      }
 
       console.log(
         "Selected chain:",
@@ -396,7 +432,7 @@ Contract: ${shortAddress}`;
         ? ethers.parseEther(currentChain.isFeeValue.toString())
         : ethers.parseEther("0.000045"); // Default 0.000045 ETH fee
 
-      const platformAddress = "0xEAa823AB4C4eE00283d8ed7be713ddf8A5ba0Fac";
+      const platformAddress = "0x78672c2Eda56A8f789A4cA0CcbABCd08730d22dc";
       const deploymentValue = feeRequired ? feeAmount : ethers.parseEther("0");
       console.log(
         "Deployment value:",
@@ -440,15 +476,15 @@ Contract: ${shortAddress}`;
         );
 
         const initialSupply = ethers.parseUnits(
-          tokenContractFormData.initialSupply || "1000000",
+          contractFormData.token.initialSupply || "1000000",
           18
         );
 
         console.log("Deploying Token Contract with params:", {
-          name: tokenContractFormData.name || defaultValues.token.name,
-          symbol: tokenContractFormData.symbol || defaultValues.token.symbol,
+          name: contractFormData.token.name || defaultValues.token.name,
+          symbol: contractFormData.token.symbol || defaultValues.token.symbol,
           initialSupply:
-            tokenContractFormData.initialSupply ||
+            contractFormData.token.initialSupply ||
             defaultValues.token.initialSupply,
           feeReceiver: platformAddress,
           feeRequired,
@@ -456,8 +492,8 @@ Contract: ${shortAddress}`;
         });
 
         contract = await contractFactory.deploy(
-          tokenContractFormData.name || defaultValues.token.name,
-          tokenContractFormData.symbol || defaultValues.token.symbol,
+          contractFormData.token.name || defaultValues.token.name,
+          contractFormData.token.symbol || defaultValues.token.symbol,
           initialSupply,
           platformAddress,
           feeRequired,
@@ -475,20 +511,19 @@ Contract: ${shortAddress}`;
         );
 
         console.log("Deploying NFT Contract with params:", {
-          name: nftContractFormData.name || defaultValues.nft.name,
-          symbol: nftContractFormData.symbol || defaultValues.nft.symbol,
-          baseURI: nftContractFormData.baseURI || defaultValues.nft.baseURI,
-          maxSupply: "10000", // Default max supply
+          name: contractFormData.nft.name || defaultValues.nft.name,
+          symbol: contractFormData.nft.symbol || defaultValues.nft.symbol,
+          maxSupply:
+            contractFormData.nft.maxSupply || defaultValues.nft.maxSupply,
           feeReceiver: platformAddress,
           feeRequired,
           feeAmount: ethers.formatEther(feeAmount),
         });
 
         contract = await contractFactory.deploy(
-          nftContractFormData.name || defaultValues.nft.name,
-          nftContractFormData.symbol || defaultValues.nft.symbol,
-          nftContractFormData.baseURI || defaultValues.nft.baseURI,
-          "10000", // Max supply
+          contractFormData.nft.name || defaultValues.nft.name,
+          contractFormData.nft.symbol || defaultValues.nft.symbol,
+          contractFormData.nft.maxSupply || defaultValues.nft.maxSupply,
           platformAddress,
           feeRequired,
           feeAmount,
@@ -524,13 +559,13 @@ Contract: ${shortAddress}`;
           txHash
         );
 
-      setDeploymentState((prev) => ({
-        ...prev,
-        isDeploying: false,
+        setDeploymentState((prev) => ({
+          ...prev,
+          isDeploying: false,
           txHash,
           contractAddress,
-        error: null,
-      }));
+          error: null,
+        }));
 
         // Open success modal
         setIsSuccessModalOpen(true);
@@ -544,11 +579,52 @@ Contract: ${shortAddress}`;
       console.log("Deployment completed successfully");
     } catch (error) {
       console.error("Deploy error:", error);
+
+      // Simplify error messages for common cases
+      let userFriendlyMessage = "An error occurred";
+
+      // Check for user rejection errors
+      if (error instanceof Error) {
+        const errorMessage = error.message.toLowerCase();
+
+        // User rejected transaction
+        if (
+          errorMessage.includes("user denied") ||
+          errorMessage.includes("user rejected") ||
+          errorMessage.includes("rejected by user") ||
+          errorMessage.includes("action_rejected") ||
+          errorMessage.includes("ethers-user-denied") ||
+          errorMessage.includes("code 4001")
+        ) {
+          userFriendlyMessage = "Transaction rejected by wallet";
+        }
+        // Gas fee errors
+        else if (
+          errorMessage.includes("insufficient funds") ||
+          (errorMessage.includes("gas") && errorMessage.includes("exceed"))
+        ) {
+          userFriendlyMessage = "Insufficient balance or gas limit error";
+        }
+        // Network errors
+        else if (
+          errorMessage.includes("network") ||
+          errorMessage.includes("connection") ||
+          errorMessage.includes("disconnected")
+        ) {
+          userFriendlyMessage =
+            "Network connection error, please check your wallet is connected to the correct network";
+        }
+        // Provider errors
+        else if (errorMessage.includes("provider")) {
+          userFriendlyMessage =
+            "Wallet provider error, please reconnect your wallet";
+        }
+      }
+
       setDeploymentState((prev) => ({
         ...prev,
         isDeploying: false,
-        error:
-          error instanceof Error ? error.message : "An unknown error occurred",
+        error: userFriendlyMessage,
       }));
     }
   };
@@ -566,6 +642,40 @@ Contract: ${shortAddress}`;
     );
   }, [availableChains, searchQuery]);
 
+  // Handle chain selection
+  const handleChainChange = async (chainId: number) => {
+    setSelectedChainId(chainId);
+
+    // Enhanced wallet connection check
+    const isWalletConnected =
+      walletIsConnected && !!address && !!window.ethereum;
+
+    // Only switch the wallet's network when explicitly requested by the user
+    // through a UI interaction (like clicking a network in the dropdown)
+    if (isWalletConnected) {
+      try {
+        console.log(`Switching wallet to chain ID: ${chainId}`);
+        await switchChain({ chainId });
+        console.log("Chain switched successfully");
+        
+        // Dispatch a custom event to indicate this was a user-initiated chain change
+        if (typeof window !== 'undefined' && window.document) {
+          const event = new CustomEvent('chainChanged', { 
+            detail: { 
+              chainId: chainId,
+              userInitiated: true
+            } 
+          });
+          window.document.dispatchEvent(event);
+        }
+      } catch (error) {
+        console.error("Error switching chain:", error);
+        // Still update the UI selection even if wallet switch fails
+        // This allows users to see their selection and try again
+      }
+    }
+  };
+
   return (
     <div className="dark">
       <GlobalStyles />
@@ -580,8 +690,8 @@ Contract: ${shortAddress}`;
 
         <div className="w-full max-w-4xl mx-auto z-10 px-4 pt-4 sm:py-8 flex flex-col">
           <div className="flex justify-between items-center mb-4 sm:mb-8 mt-2 sm:mt-0">
-              <div className="flex items-center">
-                    <Image
+            <div className="flex items-center">
+              <Image
                 src="/logo.png"
                 alt="OneClick Deployer Logo"
                 width={80}
@@ -593,21 +703,20 @@ Contract: ${shortAddress}`;
                   OneClick Deployer
                 </h2>
                 <p className="text-xs text-indigo-300">Deploy in seconds</p>
-                  </div>
               </div>
+            </div>
             <div className="flex items-center gap-2 sm:gap-3">
               <DeploymentCounter />
-                  <button
+              <button
                 onClick={() => setIsHistoryOpen(true)}
                 className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-indigo-500/30 bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-300 hover:text-indigo-200 transition-colors"
-                  >
+              >
                 <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span className="text-xs sm:text-sm font-medium">History</span>
-                  </button>
-
+              </button>
               <ConnectButton />
-                  </div>
-                </div>
+            </div>
+          </div>
 
           <div className="text-center mb-4 sm:mb-8">
             <h1 className="text-xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-indigo-300 mb-1 sm:mb-3">
@@ -626,312 +735,150 @@ Contract: ${shortAddress}`;
                   <NetworkSelectorButton
                     selectedChainId={selectedChainId}
                     availableChains={availableChains}
-                    onClick={() => setNetworkModalOpen(true)}
+                    onClick={() => {
+                      // Enhanced wallet connection check
+                      const hasAddress = !!address;
+                      const hasProvider =
+                        typeof window !== "undefined" && !!window.ethereum;
+                      // WalletConnect hatası nedeniyle geçici çözüm
+                      const isWalletConnected =
+                        (wagmiIsConnected || hasAddress) && hasProvider;
+
+                      console.log("Network selector wallet check:", {
+                        wagmiIsConnected,
+                        hasAddress,
+                        hasProvider,
+                        manuallyConnected: hasAddress && hasProvider,
+                      });
+
+                      if (isWalletConnected) {
+                        setNetworkModalOpen(true);
+                      } else {
+                        // If wallet not connected, show error and prompt to connect wallet
+                        const errorMessage = !wagmiIsConnected
+                          ? "Please connect your wallet first"
+                          : !hasAddress
+                          ? "Could not detect wallet address, please reconnect"
+                          : "Could not detect Ethereum provider, please refresh the page";
+
+                        setDeploymentState((prev) => ({
+                          ...prev,
+                          error: errorMessage,
+                        }));
+
+                        // Try to open wallet connect modal
+                        if (typeof window !== "undefined") {
+                          // Attempt to access the global connectKit object if available
+                          if (
+                            window.connectKit &&
+                            typeof window.connectKit.openConnectModal ===
+                              "function"
+                          ) {
+                            window.connectKit.openConnectModal();
+                          } else {
+                            // Fallback to clicking the connect button
+                            const connectKitButton = document.querySelector(
+                              "[data-connectkit-button]"
+                            );
+                            if (connectKitButton instanceof HTMLElement) {
+                              connectKitButton.click();
+                            }
+                          }
+                        }
+                      }
+                    }}
                     handleChainChange={handleChainChange}
                     chains={chains}
                   />
-            </div>
-          </div>
-        </div>
-
-            <div className="backdrop-blur-xl border border-indigo-500/20 rounded-2xl overflow-hidden shadow-2xl">
-              <div className="p-2 sm:p-3 md:p-4">
-                <div className="overflow-hidden rounded-xl shadow-xl border border-indigo-500/30 mb-3 sm:mb-4 md:mb-6 backdrop-blur-md">
-              <div className="grid grid-cols-3 relative">
-                <button
-                  onClick={() => setActiveTab("simple")}
-                      className={`py-3 sm:py-3.5 md:py-4 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base font-semibold transition-colors ${
-                    activeTab === "simple"
-                          ? "text-white bg-indigo-500/30 backdrop-blur-md"
-                          : "text-indigo-300 hover:bg-indigo-600/20"
-                  }`}
-                >
-                  Simple Contract
-                </button>
-                <button
-                  onClick={() => setActiveTab("token")}
-                      className={`py-3 sm:py-3.5 md:py-4 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base font-semibold transition-colors ${
-                    activeTab === "token"
-                          ? "text-white bg-indigo-500/30 backdrop-blur-md"
-                          : "text-indigo-300 hover:bg-indigo-600/20"
-                  }`}
-                >
-                  Token Contract
-                </button>
-                <button
-                  onClick={() => setActiveTab("nft")}
-                      className={`py-3 sm:py-3.5 md:py-4 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base font-semibold transition-colors ${
-                    activeTab === "nft"
-                          ? "text-white bg-indigo-500/30 backdrop-blur-md"
-                          : "text-indigo-300 hover:bg-indigo-600/20"
-                  }`}
-                >
-                  NFT Contract
-                </button>
+                </div>
+                
+                {/* Add ChainInfoBar component to display faucet links and chain details */}
+                {selectedChainId && (
+                  <ChainInfoBar selectedChain={chains.find(chain => chain.chainId === selectedChainId) || null} />
+                )}
               </div>
             </div>
 
+            <div className="backdrop-blur-xl border border-indigo-500/20 rounded-2xl overflow-hidden shadow-2xl">
+              <div className="p-2 sm:p-3 md:p-4">
+                <TabSelector
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                />
+
                 <div className="backdrop-blur-lg rounded-xl p-2 sm:p-3 md:p-5 border border-indigo-500/20 ">
-              {activeTab === "simple" && (
-                <div>
-                      <div className="flex justify-between items-center mb-3 sm:mb-4">
-                        <h2 className="text-base sm:text-lg font-medium text-gray-300">
-                    Simple Contract
-                  </h2>
-                        <button
-                          onClick={useSimpleContractDefaults}
-                          className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded border border-indigo-600/30"
-                        >
-                          Use Default Data
-                        </button>
-                      </div>
-                      <p className="text-xs sm:text-sm text-gray-300/80 mb-3 sm:mb-4">
-                        Deploy a basic smart contract with a custom name.
-                  </p>
+                  {activeTab === "simple" && (
+                    <SimpleContractForm onDeploy={handleDeployContract} />
+                  )}
 
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <label
-                        htmlFor="simple-name"
-                        className="block text-sm font-medium text-gray-300"
-                      >
-                        Contract Name
-                      </label>
-                      <input
-                        id="simple-name"
-                        type="text"
-                            placeholder={defaultValues.simple.name}
-                        value={simpleContractFormData.name}
-                        onChange={(e) =>
-                          setSimpleContractFormData((prev) => ({
-                            ...prev,
-                            name: e.target.value,
-                          }))
-                        }
-                            className="w-full px-3 py-2 text-gray-300 backdrop-blur-sm border border-indigo-600/20 rounded-md focus:outline-none focus:border-indigo-600/50"
-                      />
-                    </div>
+                  {activeTab === "token" && (
+                    <TokenContractForm
+                      name={contractFormData.token.name}
+                      symbol={contractFormData.token.symbol}
+                      totalSupply={contractFormData.token.initialSupply}
+                      onChange={(field, value) => {
+                        setContractFormData((prev) => ({
+                          ...prev,
+                          token: {
+                            ...prev.token,
+                            [field]: value,
+                          },
+                        }));
+                      }}
+                      onUseDefaultData={() => applyDefaultValues("token")}
+                      defaultValues={{
+                        name: defaultValues.token.name,
+                        symbol: defaultValues.token.symbol,
+                        totalSupply: defaultValues.token.initialSupply,
+                      }}
+                    />
+                  )}
 
-                    <div className="space-y-2">
-                      <label
-                            htmlFor="simple-symbol"
-                        className="block text-sm font-medium text-gray-300"
-                      >
-                            Contract Symbol
-                      </label>
-                      <input
-                            id="simple-symbol"
-                        type="text"
-                            placeholder={defaultValues.simple.symbol}
-                            value={simpleContractFormData.symbol}
-                        onChange={(e) =>
-                          setSimpleContractFormData((prev) => ({
-                            ...prev,
-                                symbol: e.target.value,
-                          }))
-                        }
-                            className="w-full px-3 py-2 text-gray-300 backdrop-blur-sm border border-indigo-600/20 rounded-md focus:outline-none focus:border-indigo-600/50"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
+                  {activeTab === "nft" && (
+                    <NFTContractForm
+                      name={contractFormData.nft.name}
+                      symbol={contractFormData.nft.symbol}
+                      maxSupply={contractFormData.nft.maxSupply}
+                      onChange={(field, value) => {
+                        setContractFormData((prev) => ({
+                          ...prev,
+                          nft: {
+                            ...prev.nft,
+                            [field]: value,
+                          },
+                        }));
+                      }}
+                      onUseDefaultData={() => applyDefaultValues("nft")}
+                      defaultValues={{
+                        name: defaultValues.nft.name,
+                        symbol: defaultValues.nft.symbol,
+                        maxSupply: defaultValues.nft.maxSupply,
+                      }}
+                    />
+                  )}
 
-              {activeTab === "token" && (
-                <div>
-                      <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-lg font-medium mb-1 text-gray-300">
-                    Token Contract
-                  </h2>
-                        <button
-                          onClick={useTokenContractDefaults}
-                          className="text-xs px-2 py-1 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded border border-indigo-600/30"
-                        >
-                          Use Default Data
-                        </button>
-                      </div>
-                  <p className="text-sm text-gray-300/80 mb-4">
-                        Deploy an ERC-20 token with custom name, symbol and
-                        supply.
-                  </p>
-
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <label
-                        htmlFor="token-name"
-                        className="block text-sm font-medium text-gray-300"
-                      >
-                        Token Name
-                      </label>
-                      <input
-                        id="token-name"
-                        type="text"
-                            placeholder={defaultValues.token.name}
-                        value={tokenContractFormData.name}
-                        onChange={(e) =>
-                          setTokenContractFormData((prev) => ({
-                            ...prev,
-                            name: e.target.value,
-                          }))
-                        }
-                            className="w-full px-3 py-2 text-gray-300 backdrop-blur-sm border border-indigo-600/20 rounded-md focus:outline-none focus:border-indigo-600/50"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label
-                        htmlFor="token-symbol"
-                        className="block text-sm font-medium text-gray-300"
-                      >
-                        Token Symbol
-                      </label>
-                      <input
-                        id="token-symbol"
-                        type="text"
-                            placeholder={defaultValues.token.symbol}
-                        value={tokenContractFormData.symbol}
-                        onChange={(e) =>
-                          setTokenContractFormData((prev) => ({
-                            ...prev,
-                            symbol: e.target.value,
-                          }))
-                        }
-                            className="w-full px-3 py-2 text-gray-300 backdrop-blur-sm border border-indigo-600/20 rounded-md focus:outline-none focus:border-indigo-600/50"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label
-                        htmlFor="token-supply"
-                        className="block text-sm font-medium text-gray-300"
-                      >
-                        Initial Supply
-                      </label>
-                      <input
-                        id="token-supply"
-                        type="text"
-                            placeholder={defaultValues.token.initialSupply}
-                        value={tokenContractFormData.initialSupply}
-                        onChange={(e) =>
-                          setTokenContractFormData((prev) => ({
-                            ...prev,
-                            initialSupply: e.target.value,
-                          }))
-                        }
-                            className="w-full px-3 py-2 text-gray-300 backdrop-blur-sm border border-indigo-600/20 rounded-md focus:outline-none focus:border-indigo-600/50"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {activeTab === "nft" && (
-                <div>
-                      <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-lg font-medium mb-1 text-gray-300">
-                    NFT Contract
-                  </h2>
-                        <button
-                          onClick={useNFTContractDefaults}
-                          className="text-xs px-2 py-1 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded border border-indigo-600/30"
-                        >
-                          Use Default Data
-                        </button>
-                      </div>
-                  <p className="text-sm text-gray-300/80 mb-4">
-                    Deploy an ERC-721 NFT collection with custom properties.
-                  </p>
-
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <label
-                        htmlFor="nft-name"
-                        className="block text-sm font-medium text-gray-300"
-                      >
-                        Collection Name
-                      </label>
-                      <input
-                        id="nft-name"
-                        type="text"
-                            placeholder={defaultValues.nft.name}
-                        value={nftContractFormData.name}
-                        onChange={(e) =>
-                          setNftContractFormData((prev) => ({
-                            ...prev,
-                            name: e.target.value,
-                          }))
-                        }
-                            className="w-full px-3 py-2 text-gray-300 backdrop-blur-sm border border-indigo-600/20 rounded-md focus:outline-none focus:border-indigo-600/50"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label
-                        htmlFor="nft-symbol"
-                        className="block text-sm font-medium text-gray-300"
-                      >
-                        Collection Symbol
-                      </label>
-                      <input
-                        id="nft-symbol"
-                        type="text"
-                            placeholder={defaultValues.nft.symbol}
-                        value={nftContractFormData.symbol}
-                        onChange={(e) =>
-                          setNftContractFormData((prev) => ({
-                            ...prev,
-                            symbol: e.target.value,
-                          }))
-                        }
-                            className="w-full px-3 py-2 text-gray-300 backdrop-blur-sm border border-indigo-600/20 rounded-md focus:outline-none focus:border-indigo-600/50"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label
-                        htmlFor="nft-baseuri"
-                        className="block text-sm font-medium text-gray-300"
-                      >
-                        Base URI
-                      </label>
-                      <input
-                        id="nft-baseuri"
-                        type="text"
-                            placeholder={defaultValues.nft.baseURI}
-                        value={nftContractFormData.baseURI}
-                        onChange={(e) =>
-                          setNftContractFormData((prev) => ({
-                            ...prev,
-                            baseURI: e.target.value,
-                          }))
-                        }
-                            className="w-full px-3 py-2 text-white backdrop-blur-sm border border-indigo-600/20 rounded-md focus:outline-none focus:border-indigo-600/50"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <button
-                    className="w-full mt-6 py-4 px-4 rounded-xl font-semibold text-sm sm:text-base text-white backdrop-blur-md border border-indigo-500/40 shadow-[0_4px_20px_rgba(79,70,229,0.15)] bg-gradient-to-r from-indigo-500/20 to-indigo-600/20 hover:from-indigo-500/30 hover:to-indigo-600/30 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                  <button
+                    className="w-full mt-6 py-4 rounded-md shadow-xl backdrop-blur-md font-medium text-indigo-400 bg-indigo-900/20 border border-indigo-800/40 hover:bg-indigo-800/50 transition-colors duration-200 disabled:opacity-70 disabled:cursor-not-allowed focus:outline-none"
                     onClick={handleDeployContract}
-                disabled={deploymentState.isDeploying}
-              >
+                    disabled={deploymentState.isDeploying}
+                  >
                     {deploymentState.isDeploying ? (
                       <div className="flex items-center justify-center gap-2">
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <div className="w-5 h-5 border-2 border-indigo-300 border-t-transparent rounded-full animate-spin"></div>
                         <span>Deploying...</span>
                       </div>
                     ) : (
-                      `Deploy ${
-                      activeTab === "simple"
-                        ? "Simple Contract"
-                        : activeTab === "token"
-                        ? "Token Contract"
-                        : "NFT Contract"
-                      }`
+                      <div className="flex items-center justify-center gap-2">
+                        <span>
+                          {activeTab === "simple"
+                            ? "Deploy Contract"
+                            : activeTab === "token"
+                            ? "Deploy Token"
+                            : "Deploy NFT"}
+                        </span>
+                      </div>
                     )}
-              </button>
+                  </button>
 
                   {/* Error message display */}
                   {deploymentState.error && (
@@ -939,6 +886,16 @@ Contract: ${shortAddress}`;
                       <p className="text-red-300 text-sm text-center">
                         {deploymentState.error}
                       </p>
+                      {/* WalletConnect sorunu için yardım mesajı */}
+                      {deploymentState.error ===
+                        "Please connect your wallet first" &&
+                        address && (
+                          <p className="text-red-300 text-xs text-center mt-2">
+                            ⚠️ WalletConnect sorunu tespit edildi. Sayfayı
+                            yenileyip tekrar deneyin veya farklı bir cüzdan
+                            kullanmayı deneyin.
+                          </p>
+                        )}
                     </div>
                   )}
                 </div>
@@ -972,8 +929,8 @@ Contract: ${shortAddress}`;
               </Link>
             </span>
           </div>
-            </div>
-          </div>
+        </div>
+      </div>
 
       <NetworkSelector
         isOpen={networkModalOpen}
@@ -988,117 +945,29 @@ Contract: ${shortAddress}`;
         chains={chains}
       />
 
-      {/* Success Modal - More modern and transparent */}
-      {isSuccessModalOpen && deploymentState.contractAddress && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-lg flex items-center justify-center z-50 p-4">
-          <div className="bg-gradient-to-b from-indigo-950/60 to-black/60 backdrop-blur-xl border border-indigo-500/30 rounded-2xl shadow-[0_10px_50px_rgba(99,102,241,0.15)] w-full max-w-md p-6 relative">
-            <button
-              onClick={() => setIsSuccessModalOpen(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex flex-col items-center justify-center mb-6">
-              <div className="w-16 h-16 bg-gradient-to-br from-indigo-500/20 to-indigo-600/20 backdrop-blur-md rounded-full flex items-center justify-center mb-4">
-                <Check className="w-8 h-8 text-indigo-300" />
-              </div>
-              <h3 className="text-xl font-bold text-white">
-                Deployment Successful!
-              </h3>
-              <p className="text-indigo-200/90 text-center mt-2">
-                Your contract has been successfully deployed to the blockchain
-            </p>
-          </div>
-
-            <div className="space-y-4">
-              <div className="bg-indigo-900/20 backdrop-blur-md p-3 rounded-lg border border-indigo-500/20">
-                <p className="text-xs text-indigo-300/80 mb-1">
-                  Contract Address
-                </p>
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-indigo-100 truncate mr-2">
-                    {deploymentState.contractAddress}
-                  </p>
-                  <button
-                    onClick={() =>
-                      copyToClipboard(deploymentState.contractAddress!)
-                    }
-                    className="text-indigo-300 hover:text-indigo-200 transition-colors"
-                  >
-                    <Copy className="w-4 h-4" />
-                  </button>
-        </div>
-      </div>
-
-              {deploymentState.txHash && (
-                <div className="bg-indigo-900/20 backdrop-blur-md p-3 rounded-lg border border-indigo-500/20">
-                  <p className="text-xs text-indigo-300/80 mb-1">
-                    Transaction Hash
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-indigo-100 truncate mr-2">
-                      {deploymentState.txHash}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => copyToClipboard(deploymentState.txHash!)}
-                        className="text-indigo-300 hover:text-indigo-200 transition-colors"
-                      >
-                        <Copy className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          const chainId =
-                            selectedChainId || config.state.chainId;
-                          if (chainId && deploymentState.txHash) {
-                            openInExplorer(deploymentState.txHash, chainId);
-                          }
-                        }}
-                        className="text-indigo-300 hover:text-indigo-200 transition-colors"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="pt-4 border-t border-indigo-500/20 mt-2">
-                <p className="text-sm text-center text-indigo-300/80 mb-3">
-                  Share your deployment
-                </p>
-                <button
-                  onClick={() => {
-                    const chainName =
-                      chains.find(
-                        (c) =>
-                          c.chainId ===
-                          (selectedChainId || config.state.chainId)
-                      )?.chainName || "blockchain";
-                    const contractType =
-                      activeTab === "simple"
-                        ? "Simple Contract"
-                        : activeTab === "token"
-                        ? "Token Contract"
-                        : "NFT Contract";
-
-                    shareOnTwitter(
-                      deploymentState.contractAddress!,
-                      chainName,
-                      contractType
-                    );
-                  }}
-                  className="w-full flex items-center justify-center gap-2 py-3 bg-[#1DA1F2]/90 hover:bg-[#1a94e0] text-white rounded-lg font-medium transition-colors backdrop-blur-sm"
-                >
-                  <Twitter className="w-5 h-5" />
-                  Share on Twitter
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Success Modal Component */}
+      <SuccessModal
+        isOpen={isSuccessModalOpen}
+        onClose={() => setIsSuccessModalOpen(false)}
+        contractAddress={deploymentState.contractAddress || ""}
+        txHash={deploymentState.txHash}
+        contractType={
+          activeTab === "simple"
+            ? "Simple Contract"
+            : activeTab === "token"
+            ? "Token Contract"
+            : "NFT Contract"
+        }
+        chainName={
+          chains.find(
+            (c) => c.chainId === (selectedChainId || config.state.chainId)
+          )?.chainName || "blockchain"
+        }
+        chainId={selectedChainId || config.state.chainId || 1}
+        copyToClipboard={copyToClipboard}
+        openInExplorer={openInExplorer}
+        shareOnTwitter={shareOnTwitter}
+      />
 
       {/* Replace the Transaction History Modal with the imported component */}
       <TransactionHistoryModal

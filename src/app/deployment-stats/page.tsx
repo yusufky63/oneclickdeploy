@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { getDeploymentCounts } from "@/lib/supabase";
 import Link from "next/link";
 import { ArrowLeft, Download, AlertTriangle } from "lucide-react";
-import GridBackground from "@/components/common/Grid-Background";
+import GridBackground from "@/components/ui/Grid-Background";
 
 interface DeploymentStat {
   chain_id: number;
@@ -166,9 +166,7 @@ export default function DeploymentStatsPage() {
                       <th className="px-4 py-3 text-left text-sm font-medium text-indigo-200">Chain ID</th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-indigo-200">Deployments</th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-indigo-200">Percentage</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-indigo-200">First Deployment</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-indigo-200">Last Update</th>
-                    </tr>
+                     </tr>
                   </thead>
                   <tbody>
                     {stats.length === 0 ? (
@@ -186,12 +184,7 @@ export default function DeploymentStatsPage() {
                           <td className="px-4 py-3 text-sm text-indigo-100">
                             {((stat.count / totalDeployments) * 100).toFixed(1)}%
                           </td>
-                          <td className="px-4 py-3 text-sm text-indigo-100">
-                            {stat.created_at ? new Date(stat.created_at).toLocaleString() : "N/A"}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-indigo-100">
-                            {stat.updated_at ? new Date(stat.updated_at).toLocaleString() : "N/A"}
-                          </td>
+                         
                         </tr>
                       ))
                     )}
