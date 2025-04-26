@@ -32,12 +32,12 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://OneClickDeploy.xyz",
+    url: "https://oneclickdeploy.xyz",
     title: "OneClickDeploy | Modern Smart Contract Deployment",
     description: "Deploy tokens and NFTs with no coding required",
     siteName: "OneClickDeploy",
     images: [{
-      url: "/og-image.png", // You'll need to add this image to your public folder
+      url: "https://i.ibb.co/HLJXYDqL/banner-oneclickdeploy.png", // /public/social/og-image.png olarak kaydedin
       width: 1200,
       height: 630,
       alt: "OneClickDeploy Preview",
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     title: "OneClickDeploy | Modern Smart Contract Deployment",
     description: "Deploy tokens and NFTs with no coding required",
     creator: "@1ClickDeployer",
-    images: ["/twitter-image.png"], // You'll need to add this image to your public folder
+    images: ["https://i.ibb.co/HLJXYDqL/banner-oneclickdeploy.png"], // /public/social/twitter-image.png olarak kaydedin
   },
   metadataBase: new URL("https://oneclickdeploy.xyz"),
 };
@@ -83,8 +83,7 @@ export default function RootLayout({
       >
         <BannerWrapper />
         
-        {/* Ana içerik - Mobilde dikey banner için daha fazla boşluk */}
-        <div className="pt-20 sm:pt-14"> {/* Mobilde daha fazla, masaüstünde normal boşluk */}
+        <div className="pt-20 sm:pt-14">
           <div className="fixed top-0 left-[-20%] w-[60%] h-[30%] rounded-full bg-indigo-600/5 blur-3xl pointer-events-none z-0" aria-hidden="true" />
           <div className="fixed bottom-0 right-[-20%] w-[60%] h-[30%] rounded-full bg-indigo-600/5 blur-3xl pointer-events-none z-0" aria-hidden="true" />
           

@@ -108,12 +108,11 @@ export default function Home() {
   // Wagmi hooks for wallet and network
   const { address, isConnected: wagmiIsConnected } = useAccount();
 
-  // Added additional verification to ensure wallet connection status is consistent
-  // WalletConnect hatası nedeniyle geçici çözüm: Adres varsa bağlı kabul et
+  // Mobil cihazlarda cüzdan bağlantısı ve provider algılama iyileştirmeleri
+  // Wallet detection için iyileştirilmiş kontrol
   const walletIsConnected =
     (wagmiIsConnected || !!address) &&
-    typeof window !== "undefined" &&
-    !!window.ethereum;
+    (typeof window !== "undefined" && (!!window.ethereum || localStorage.getItem('walletconnect') !== null));
 
   // Log wallet status for debugging
   useEffect(() => {
@@ -328,11 +327,7 @@ Contract: ${contractAddress}`;
 
   const handleDeployContract = async () => {
     // Enhanced wallet connection check using all available signals
-    const isWalletReady =
-      walletIsConnected &&
-      !!address &&
-      typeof window !== "undefined" &&
-      !!window.ethereum;
+    const isWalletReady = walletIsConnected && !!address;
 
     if (!isWalletReady) {
       console.log("Wallet not connected or ready");
@@ -388,21 +383,55 @@ Contract: ${contractAddress}`;
     }));
 
     try {
-      // Ensure ethereum provider is available and ready
-      if (!window.ethereum || !window.ethereum.isConnected()) {
-        console.log("Ethereum provider not available or not connected");
-        setDeploymentState((prev) => ({
-          ...prev,
-          isDeploying: false,
-          error: "Ethereum provider not available or disconnected",
-        }));
-        return;
+      // Ensure ethereum provider is available and ready - Mobil için de algılama
+      const getProvider = async () => {
+        // Normal browserdan bağlı cüzdan kontrolü
+        if (window.ethereum && window.ethereum.isConnected()) {
+          return window.ethereum;
+        }
+        
+        // WalletConnect için özel kontrol
+        if (address) {
+          // WalletConnect ile bağlandıysak ve ethereum objesi yoksa
+          // ConnectKit'in provider'ını almaya çalışalım
+          try {
+            // Bir süre bekleyerek provider'ın hazır olmasını sağla
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            if (window.ethereum) {
+              return window.ethereum;
+            }
+            
+            // Son çare olarak sadece address bilgisini kullanarak devam et
+            console.log("Using fallback provider with connected address:", address);
+            return {
+              request: async ({ method, params = [] }: { method: string; params?: unknown[] }) => {
+                if (method === 'eth_accounts') {
+                  return [address];
+                }
+                throw new Error(`Method ${method} not supported in fallback provider. Params: ${JSON.stringify(params)}`);
+              }
+            };
+          } catch (e) {
+            console.error("Error getting provider:", e);
+            throw new Error("Could not get provider despite wallet being connected");
+          }
+        }
+        
+        throw new Error("No ethereum provider available");
+      };
+      
+      const provider = await getProvider();
+      
+      if (!provider) {
+        throw new Error("Ethereum provider not available");
       }
-
-      const provider = new ethers.BrowserProvider(
-        window.ethereum as ethers.Eip1193Provider
+      
+      const ethersProvider = new ethers.BrowserProvider(
+        provider as ethers.Eip1193Provider
       );
-      const signer = await provider.getSigner();
+      
+      const signer = await ethersProvider.getSigner();
       console.log("Current signer:", signer.address);
 
       if (
