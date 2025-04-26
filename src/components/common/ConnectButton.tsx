@@ -16,7 +16,7 @@ export function ConnectButton({ className = "" }: ConnectButtonProps) {
         return (
           <Button
             onClick={show}
-            className={`flex items-center gap-2 text-indigo-400 bg-indigo-600/10 hover:bg-indigo-600/20 border border-indigo-600/30 shadow-[0_4px_20px_rgba(79,70,229,0.15)] rounded-xl ${className}`}
+            className={`flex items-center gap-2 text-indigo-400 bg-indigo-600/10 hover:bg-indigo-600/20 border border-indigo-600/30 shadow-[0_4px_20px_rgba(79,70,229,0.15)] rounded-lg ${className}`}
             variant="ghost"
           >
             <Wallet className="w-4 h-4" />

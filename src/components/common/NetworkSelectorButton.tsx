@@ -106,10 +106,8 @@ const NetworkSelectorButton: React.FC<NetworkSelectorButtonProps> = ({
 
       {/* Popüler ağlar için hızlı seçim - Dikey düzende */}
       {popularChains.length > 0 && (
-        <div className=" backdrop-blur-sm rounded-lg border border-indigo-600/30 p-2 sm:p-3">
-          <div className="flex items-center mb-2 sm:mb-3">
-            <span className="text-xs sm:text-sm text-indigo-300 font-medium">📌 Popular Networks</span>
-          </div>
+        <div className=" backdrop-blur-sm rounded-lg  border-indigo-600/30 ">
+         
           <div className="grid grid-cols-3 xs:grid-cols-5 sm:grid-cols-5 md:grid-cols-5 gap-1 sm:gap-2 overflow-x-auto">
             {popularChains.map(chain => (
               <button

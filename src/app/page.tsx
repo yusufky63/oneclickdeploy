@@ -11,7 +11,15 @@ import {
 import { SimpleTokenABI, SimpleTokenBytecode } from "@/contracts/SimpleToken";
 import { SimpleNFTABI, SimpleNFTBytecode } from "@/contracts/SimpleNFT";
 import { DeploymentState } from "@/types/contracts";
-import { Check, Twitter, Copy, ExternalLink, Clock, X, BarChart } from "lucide-react";
+import {
+  Check,
+  Twitter,
+  Copy,
+  ExternalLink,
+  Clock,
+  X,
+  BarChart,
+} from "lucide-react";
 import GridBackground from "@/components/common/Grid-Background";
 import { ConnectButton } from "@/components/common/ConnectButton";
 import NetworkSelector from "@/components/common/NetworkSelector";
@@ -574,8 +582,8 @@ Contract: ${shortAddress}`;
           <div className="flex justify-between items-center mb-4 sm:mb-8 mt-2 sm:mt-0">
               <div className="flex items-center">
                     <Image
-                src="/logo.png" 
-                alt="OneClick Deployer Logo" 
+                src="/logo.png"
+                alt="OneClick Deployer Logo"
                 width={80}
                 height={80}
                 className="mr-2 sm:mr-3 w-16 h-16 sm:w-auto sm:h-auto"
@@ -588,7 +596,7 @@ Contract: ${shortAddress}`;
                   </div>
               </div>
             <div className="flex items-center gap-2 sm:gap-3">
-                  <DeploymentCounter />
+              <DeploymentCounter />
                   <button
                 onClick={() => setIsHistoryOpen(true)}
                 className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-indigo-500/30 bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-300 hover:text-indigo-200 transition-colors"
@@ -596,9 +604,10 @@ Contract: ${shortAddress}`;
                 <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span className="text-xs sm:text-sm font-medium">History</span>
                   </button>
+
               <ConnectButton />
-              </div>
-            </div>
+                  </div>
+                </div>
 
           <div className="text-center mb-4 sm:mb-8">
             <h1 className="text-xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-indigo-300 mb-1 sm:mb-3">
@@ -620,10 +629,10 @@ Contract: ${shortAddress}`;
                     onClick={() => setNetworkModalOpen(true)}
                     handleChainChange={handleChainChange}
                     chains={chains}
-                            />
-                          </div>
-                  </div>
+                  />
             </div>
+          </div>
+        </div>
 
             <div className="backdrop-blur-xl border border-indigo-500/20 rounded-2xl overflow-hidden shadow-2xl">
               <div className="p-2 sm:p-3 md:p-4">
@@ -631,7 +640,7 @@ Contract: ${shortAddress}`;
               <div className="grid grid-cols-3 relative">
                 <button
                   onClick={() => setActiveTab("simple")}
-                      className={`py-1.5 sm:py-2 md:py-4 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base font-semibold transition-colors ${
+                      className={`py-3 sm:py-3.5 md:py-4 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base font-semibold transition-colors ${
                     activeTab === "simple"
                           ? "text-white bg-indigo-500/30 backdrop-blur-md"
                           : "text-indigo-300 hover:bg-indigo-600/20"
@@ -641,7 +650,7 @@ Contract: ${shortAddress}`;
                 </button>
                 <button
                   onClick={() => setActiveTab("token")}
-                      className={`py-1.5 sm:py-2 md:py-4 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base font-semibold transition-colors ${
+                      className={`py-3 sm:py-3.5 md:py-4 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base font-semibold transition-colors ${
                     activeTab === "token"
                           ? "text-white bg-indigo-500/30 backdrop-blur-md"
                           : "text-indigo-300 hover:bg-indigo-600/20"
@@ -651,7 +660,7 @@ Contract: ${shortAddress}`;
                 </button>
                 <button
                   onClick={() => setActiveTab("nft")}
-                      className={`py-1.5 sm:py-2 md:py-4 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base font-semibold transition-colors ${
+                      className={`py-3 sm:py-3.5 md:py-4 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base font-semibold transition-colors ${
                     activeTab === "nft"
                           ? "text-white bg-indigo-500/30 backdrop-blur-md"
                           : "text-indigo-300 hover:bg-indigo-600/20"
@@ -946,9 +955,20 @@ Contract: ${shortAddress}`;
                 Follow us on X
               </a>
               <span className="mx-1 text-indigo-500/40">|</span>
-              <Link href="/deployment-stats" className="flex items-center gap-1 text-indigo-300 hover:text-indigo-200 transition-colors text-sm font-bold">
+              <Link
+                href="/deployment-stats"
+                className="flex items-center gap-1 text-indigo-300 hover:text-indigo-200 transition-colors text-sm font-bold"
+              >
                 <BarChart className="w-4 h-4" />
                 <span>View Stats</span>
+              </Link>
+              <span className="mx-1 text-indigo-500/40">|</span>
+              <Link
+                href="/how-it-works"
+                className="flex items-center gap-1 text-indigo-300 hover:text-indigo-200 transition-colors text-sm font-bold"
+              >
+                <ExternalLink className="w-4 h-4" />
+                <span>How it Works</span>
               </Link>
             </span>
           </div>

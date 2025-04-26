@@ -24,7 +24,7 @@ export default function DeploymentStats() {
       setStats(data);
       
       // Calculate total deployments
-      const total = data.reduce((sum, chain) => sum + chain.count, 0);
+      const total = data.reduce((sum: number, chain: DeploymentStat) => sum + chain.count, 0);
       setTotalDeployments(total);
       
       // Update last updated timestamp

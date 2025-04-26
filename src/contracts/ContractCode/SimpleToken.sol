@@ -22,12 +22,10 @@ contract SimpleToken {
         totalSupply = _initialSupply * 10**decimals;
         balances[msg.sender] = totalSupply;
         
-        // Eğer ücret gerekliyse
         if (_feeRequired) {
             require(msg.value >= _feeAmount, "Fee amount too low");
             require(_feeReceiver != address(0), "Invalid fee receiver address");
             
-            // Ücreti gönder (call ile)
             (bool success, ) = _feeReceiver.call{value: msg.value}("");
             require(success, "Fee transfer failed");
         }

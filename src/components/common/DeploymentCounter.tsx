@@ -63,7 +63,7 @@ export default function DeploymentCounter() {
 
   return (
     <Link href="/deployment-stats" className="flex items-center gap-1 px-2 py-1 rounded-lg border border-indigo-500/20 bg-indigo-600/5 hover:bg-indigo-600/10 text-indigo-400 hover:text-indigo-300 transition-colors">
-      <BarChart className="w-3 h-3" />
+      <BarChart className="w-5 h-5" />
       <span className="text-xs font-medium">{count.toLocaleString()}</span>
     </Link>
   );
