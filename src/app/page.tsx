@@ -216,7 +216,6 @@ export default function Home() {
   useEffect(() => {
     // Cüzdan ilk kez bağlandığında, ağı otomatik değiştirmeden cüzdan ağını seçili olarak ayarla
     if (walletIsConnected && config?.state?.chainId && !selectedChainId) {
-      console.log("Cüzdan bağlı ve ağ seçili değil, cüzdan ağını kullan:", config.state.chainId);
       setSelectedChainId(config.state.chainId);
     }
   }, [walletIsConnected, config?.state?.chainId, selectedChainId]);
@@ -295,7 +294,7 @@ export default function Home() {
     contractType: string
   ) => {
     // Create a more engaging message with emojis and call-to-action
-    const text = `🚀 Just deployed a ${contractType} on ${chainName} in seconds using @OneClickDeployer! 
+    const text = `🚀 Just deployed a ${contractType} on ${chainName} in seconds using @1ClickDeployer! 
     
 ⚡ No coding required
 💰 Low gas fees
@@ -357,7 +356,9 @@ Contract: ${contractAddress}`;
       if (!wagmiIsConnected && !address) {
         // Use the same approach as in NetworkSelectorButton
         if (typeof window !== "undefined") {
-          // Try to access connectKit global
+          window.userInitiatedConnection = true;
+          
+          // Use the same approach as in NetworkSelectorButton
           if (
             window.connectKit &&
             typeof window.connectKit.openConnectModal === "function"
@@ -768,7 +769,9 @@ Contract: ${contractAddress}`;
 
                         // Try to open wallet connect modal
                         if (typeof window !== "undefined") {
-                          // Attempt to access the global connectKit object if available
+                          window.userInitiatedConnection = true;
+                          
+                          // Use the same approach as in NetworkSelectorButton
                           if (
                             window.connectKit &&
                             typeof window.connectKit.openConnectModal ===

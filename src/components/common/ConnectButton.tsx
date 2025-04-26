@@ -29,12 +29,42 @@ export function ConnectButton({ className = "" }: ConnectButtonProps) {
         
         // Address varsa ve show'a tıklandığında bağlantı modalını göstermek yerine, wallet disconnect'i göstersin
         const handleClick = () => {
-          // Eğer adres varsa ama isConnected false ise, bu WalletConnect hatası demektir
-          // Bu durumda yine de show'u çağıracağız, ama kullanıcıya bir mesaj gösterelim
-          if (!!address && !isConnected && hasProvider) {
-            console.log("WalletConnect sorunu: Adres var ama isConnected false");
-            // Kullanıcıya bir mesaj göstermek isterseniz, bir alert veya toast ekleyebilirsiniz
+          // Set flag that this is a user-initiated connection
+          if (typeof window !== 'undefined') {
+            window.userInitiatedConnection = true;
+            
+            // Force enable modal showing for this specific click
+            const allowModal = () => {
+              // Remove any existing modal killer intervals
+              const intervalId = window.modalKillerInterval;
+              if (intervalId) {
+                clearInterval(intervalId);
+                window.modalKillerInterval = undefined;
+                
+                // Reset after 5 seconds to prevent unwanted modals
+                setTimeout(() => {
+                  // Re-establish modal killer
+                  const newInterval = setInterval(() => {
+                    try {
+                      // Force close any WalletConnect modals
+                      const wcModals = document.querySelectorAll('[data-wagmi-modal], [data-connectkit-modal], .wcm-overlay, .wcm-modal');
+                      wcModals.forEach(modal => {
+                        if (modal.parentNode) modal.parentNode.removeChild(modal);
+                      });
+                    } catch (e) {
+                      console.error("Error in modal killer:", e);
+                    }
+                  }, 1000);
+                  window.modalKillerInterval = newInterval;
+                }, 5000);
+              }
+            };
+            
+            // Temporarily disable modal killing
+            allowModal();
           }
+          
+          // Call the original show function
           if (typeof show === 'function') {
             show();
           }

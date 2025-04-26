@@ -85,7 +85,6 @@ export default function RootLayout({
         
         {/* Ana içerik - Mobilde dikey banner için daha fazla boşluk */}
         <div className="pt-20 sm:pt-14"> {/* Mobilde daha fazla, masaüstünde normal boşluk */}
-          <div className="fixed inset-0 bg-[url('/grid.svg')] bg-center opacity-10 pointer-events-none z-0" />
           <div className="fixed top-0 left-[-20%] w-[60%] h-[30%] rounded-full bg-indigo-600/5 blur-3xl pointer-events-none z-0" aria-hidden="true" />
           <div className="fixed bottom-0 right-[-20%] w-[60%] h-[30%] rounded-full bg-indigo-600/5 blur-3xl pointer-events-none z-0" aria-hidden="true" />
           

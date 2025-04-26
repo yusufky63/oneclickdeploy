@@ -30,7 +30,7 @@ export default function SuccessModal({
   if (!isOpen || !contractAddress) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/30 backdrop-blur-xl flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-xl flex items-center justify-center z-[9999] p-4">
       <div className="backdrop-blur-xl bg-transparent border border-indigo-500/20 rounded-2xl shadow-lg w-full max-w-md p-6 relative overflow-hidden">
         {/* Subtle glow effects */}
         <div className="absolute -top-24 -right-24 w-48 h-48 rounded-full bg-indigo-500/5 blur-3xl"></div>
@@ -38,9 +38,9 @@ export default function SuccessModal({
         
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors bg-white/5 hover:bg-white/10 rounded-full p-1.5 z-10 backdrop-blur-sm"
+          className="absolute top-4 right-4 text-white hover:text-indigo-300 transition-colors bg-indigo-600/30 hover:bg-indigo-600/50 rounded-full p-2 z-[10000] backdrop-blur-sm shadow-lg border border-indigo-500/30"
         >
-          <X className="w-4 h-4" />
+          <X className="w-5 h-5" />
         </button>
 
         <div className="flex flex-col items-center justify-center mb-5 relative z-10">
@@ -119,7 +119,7 @@ export default function SuccessModal({
             <div className="mb-4 bg-white/5 backdrop-blur-lg p-4 rounded-lg border border-indigo-500/20">
               <p className="text-xs text-indigo-300/80 mb-2">Tweet Preview</p>
               <div className="text-xs text-white bg-black/10 rounded-lg p-3 border border-indigo-500/10 backdrop-blur-sm">
-                <p>🚀 Just deployed a {contractType} on {chainName} in seconds using @OneClickDeployer!</p>
+                <p>🚀 Just deployed a {contractType} on {chainName} in seconds using @1ClickDeployer!</p>
                 <p className="mt-2">⚡ No coding required</p>
                 <p>💰 Low gas fees</p>
                 <p className="mt-2">Try it yourself at oneclickdeploy.xyz</p>

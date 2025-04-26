@@ -8,6 +8,8 @@ interface Window {
     request: (args: { method: string; params?: Array<unknown> }) => Promise<unknown>;
     [key: string]: unknown;
   };
+  userInitiatedConnection?: boolean;
+  modalKillerInterval?: NodeJS.Timeout;
 }
 
 // This allows JSX comments to be properly typed

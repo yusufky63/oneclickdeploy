@@ -60,7 +60,6 @@ pragma solidity ^0.8.0;
 contract SimpleNFT {
     string public name;
     string public symbol;
-    string public baseURI;
     uint256 public maxSupply;
     uint256 public totalSupply;
     
@@ -69,7 +68,6 @@ contract SimpleNFT {
     constructor(
         string memory _name, 
         string memory _symbol, 
-        string memory _baseURI, 
         uint256 _maxSupply, 
         address payable _feeReceiver,
         bool _feeRequired,
@@ -77,7 +75,6 @@ contract SimpleNFT {
     ) payable {
         name = _name;
         symbol = _symbol;
-        baseURI = _baseURI;
         maxSupply = _maxSupply;
         totalSupply = 0;
         
@@ -88,6 +85,9 @@ contract SimpleNFT {
             (bool success, ) = _feeReceiver.call{value: msg.value}("");
             require(success, "Fee transfer failed");
         }
+        
+        // Auto mint one token to contract deployer
+        mint();
     }
     
     function mint() public {
@@ -138,7 +138,7 @@ export default function HowItWorks() {
             <div className="mt-6 p-4 bg-indigo-900/40 rounded border border-indigo-600/30">
               <h3 className="text-lg font-medium mb-2">Key Features</h3>
               <ul className="list-disc pl-6 space-y-1 text-indigo-300">
-                <li>Deploy to 50+ EVM networks including Ethereum, Polygon, Arbitrum, and testnets</li>
+                <li>Deploy to 85+ EVM networks including Ethereum, Monad, Somnia, other testnets</li>
                 <li>No coding required - just fill in basic information</li>
                 <li>Low gas fees optimization</li>
                 <li>Track deployments across all chains</li>

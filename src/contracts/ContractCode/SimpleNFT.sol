@@ -11,7 +11,7 @@ contract SimpleNFT {
     
     constructor(
         string memory _name, 
-        string memory _symbol,
+        string memory _symbol, 
         uint256 _maxSupply, 
         address payable _feeReceiver,
         bool _feeRequired,

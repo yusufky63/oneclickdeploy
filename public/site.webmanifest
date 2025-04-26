@@ -1,0 +1,10 @@
+{
+  "name": "OneClickDeploy",
+  "short_name": "OneClickDeploy",
+  "icons":[{"sizes":"192x192","src":"/android-chrome-192x192.png","type":"image/png"},{"sizes":"512x512","src":"/android-chrome-512x512.png","type":"image/png"}],
+  "theme_color": "#4F46E5",
+  "background_color": "#0D0D19",
+  "display": "standalone"
+}
+
+
