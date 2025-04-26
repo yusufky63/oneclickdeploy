@@ -47,7 +47,7 @@ const NetworkSelectorButton: React.FC<NetworkSelectorButtonProps> = ({
     <div className="space-y-3">
       <button
         onClick={onClick}
-        className="relative w-full flex items-center justify-between px-4 py-3.5 rounded-lg text-left transition-all duration-300 bg-indigo-900/30 border border-indigo-600/30 hover:bg-indigo-800/30 hover:border-indigo-500/40"
+        className="relative w-full flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3.5 rounded-lg text-left transition-all duration-300 bg-indigo-900/30 border border-indigo-600/30 hover:bg-indigo-800/30 hover:border-indigo-500/40"
       >
         <div className="flex items-center">
           {selectedChainId ? (
@@ -60,41 +60,41 @@ const NetworkSelectorButton: React.FC<NetworkSelectorButtonProps> = ({
                     alt=""
                     width={24}
                     height={24}
-                    className="relative w-6 h-6 mr-3 rounded-full ring-1 ring-indigo-500/50"
+                    className="relative w-5 sm:w-6 h-5 sm:h-6 mr-2 sm:mr-3 rounded-full ring-1 ring-indigo-500/50"
                   />
                 </div>
               ) : (
-                <div className="w-6 h-6 mr-3 rounded-full bg-indigo-700/50 flex items-center justify-center">
+                <div className="w-5 sm:w-6 h-5 sm:h-6 mr-2 sm:mr-3 rounded-full bg-indigo-700/50 flex items-center justify-center">
                   <span className="text-xs text-indigo-200">
                     {(availableChains.find(c => c.id === selectedChainId)?.name || "").charAt(0)}
                   </span>
                 </div>
               )}
               <div>
-                <span className="text-white font-medium">
+                <span className="text-white text-sm sm:text-base font-medium">
                   {availableChains.find(c => c.id === selectedChainId)?.name}
                 </span>
-                <div className="text-xs text-indigo-400">Network ID: {selectedChainId}</div>
+                <div className="text-xs text-indigo-400 hidden sm:block">Network ID: {selectedChainId}</div>
               </div>
             </>
           ) : (
             <div className="flex items-center text-indigo-300">
-              <div className="w-6 h-6 mr-3 rounded-full bg-indigo-700/30 flex items-center justify-center">
+              <div className="w-5 sm:w-6 h-5 sm:h-6 mr-2 sm:mr-3 rounded-full bg-indigo-700/30 flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
-              <span>Select a blockchain network</span>
+              <span className="text-sm sm:text-base">Select a network</span>
             </div>
           )}
         </div>
         <div className="flex items-center">
-          <span className="mr-2 text-xs px-2 py-0.5 rounded-full bg-indigo-900/50 text-indigo-300 border border-indigo-600/30">
+          <span className="mr-2 text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded-full bg-indigo-900/50 text-indigo-300 border border-indigo-600/30 hidden sm:inline-block">
             {availableChains.length} Networks
           </span>
           <svg 
             xmlns="http://www.w3.org/2000/svg" 
-            className="h-5 w-5 text-indigo-400" 
+            className="h-4 sm:h-5 w-4 sm:w-5 text-indigo-400" 
             fill="none" 
             viewBox="0 0 24 24" 
             stroke="currentColor"
@@ -106,41 +106,40 @@ const NetworkSelectorButton: React.FC<NetworkSelectorButtonProps> = ({
 
       {/* Popüler ağlar için hızlı seçim - Dikey düzende */}
       {popularChains.length > 0 && (
-        <div className="bg-indigo-950/40 backdrop-blur-sm rounded-lg border border-indigo-600/30 p-3">
-          <div className="flex items-center mb-3">
-            <span className="text-sm text-indigo-300 font-medium">Popular Networks</span>
+        <div className=" backdrop-blur-sm rounded-lg border border-indigo-600/30 p-2 sm:p-3">
+          <div className="flex items-center mb-2 sm:mb-3">
+            <span className="text-xs sm:text-sm text-indigo-300 font-medium">📌 Popular Networks</span>
           </div>
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-3 xs:grid-cols-5 sm:grid-cols-5 md:grid-cols-5 gap-1 sm:gap-2 overflow-x-auto">
             {popularChains.map(chain => (
               <button
                 key={chain.id}
                 onClick={() => handleChainChange(chain.id)}
-                className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${
+                className={`flex flex-col items-center justify-center p-2 sm:p-3 rounded-lg transition-all ${
                   selectedChainId === chain.id 
                     ? "bg-indigo-600/30 border border-indigo-500/50" 
                     : "hover:bg-indigo-800/30 border border-indigo-700/30 hover:border-indigo-600/50"
                 }`}
               >
-                <div className="relative mb-2">
+                <div className="relative mb-1 sm:mb-2">
                   {chain.imageUrl ? (
                     <>
                       <div className="absolute -inset-1 bg-indigo-500/20 blur-sm rounded-full"></div>
                       <Image
                         src={chain.imageUrl}
                         alt={chain.name}
-                        width={32}
-                        height={32}
+                        width={28}
+                        height={28}
                         className="relative rounded-full border border-indigo-500/30"
                       />
                     </>
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-indigo-700/50 flex items-center justify-center border border-indigo-500/30">
-                      <span className="text-md text-white">{chain.name.charAt(0)}</span>
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-indigo-700/50 flex items-center justify-center border border-indigo-500/30">
+                      <span className="text-sm sm:text-md text-white">{chain.name.charAt(0)}</span>
                     </div>
                   )}
                 </div>
-                <span className="text-xs text-white text-center font-medium">{chain.name}</span>
-                <span className="text-[10px] text-indigo-400 mt-0.5">ID: {chain.id}</span>
+                <span className="text-[10px] sm:text-xs text-white text-center font-medium truncate w-full">{chain.name}</span>
               </button>
             ))}
           </div>

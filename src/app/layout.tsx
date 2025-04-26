@@ -22,34 +22,34 @@ const geistMono = Geist_Mono({
 
 // Advanced metadata for better SEO
 export const metadata: Metadata = {
-  title: "ChainCraft | Modern Smart Contract Deployment",
+  title: "OneClickDeploy | Modern Smart Contract Deployment",
   description: "Deploy ERC-20 tokens and NFT collections in seconds with no coding required. The easiest way to launch your web3 project.",
   keywords: ["blockchain", "smart contracts", "web3", "deploy", "ethereum", "tokens", "NFT", "DeFi", "cryptocurrency"],
-  authors: [{ name: "ChainCraft Team" }],
-  creator: "ChainCraft",
-  publisher: "ChainCraft",
+  authors: [{ name: "OneClickDeploy Team" }],
+  creator: "OneClickDeploy",
+  publisher: "OneClickDeploy",
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://chaincraft.app",
-    title: "ChainCraft | Modern Smart Contract Deployment",
+    url: "https://OneClickDeploy.app",
+    title: "OneClickDeploy | Modern Smart Contract Deployment",
     description: "Deploy tokens and NFTs with no coding required",
-    siteName: "ChainCraft",
+    siteName: "OneClickDeploy",
     images: [{
       url: "/og-image.png", // You'll need to add this image to your public folder
       width: 1200,
       height: 630,
-      alt: "ChainCraft Preview",
+      alt: "OneClickDeploy Preview",
     }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "ChainCraft | Modern Smart Contract Deployment",
+    title: "OneClickDeploy | Modern Smart Contract Deployment",
     description: "Deploy tokens and NFTs with no coding required",
-    creator: "@ChainCraft",
+    creator: "@OneClickDeploy",
     images: ["/twitter-image.png"], // You'll need to add this image to your public folder
   },
-  metadataBase: new URL("https://chaincraft.app"),
+  metadataBase: new URL("https://OneClickDeploy.app"),
 };
 
 // Viewport settings for better mobile experience

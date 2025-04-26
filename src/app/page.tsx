@@ -11,12 +11,17 @@ import {
 import { SimpleTokenABI, SimpleTokenBytecode } from "@/contracts/SimpleToken";
 import { SimpleNFTABI, SimpleNFTBytecode } from "@/contracts/SimpleNFT";
 import { DeploymentState } from "@/types/contracts";
-import { Check, Twitter, Copy, ExternalLink, Clock, X } from "lucide-react";
+import { Check, Twitter, Copy, ExternalLink, Clock, X, BarChart } from "lucide-react";
 import GridBackground from "@/components/common/Grid-Background";
 import { ConnectButton } from "@/components/common/ConnectButton";
-import NoiseEffect from "@/components/common/NoiseEffect";
 import NetworkSelector from "@/components/common/NetworkSelector";
 import NetworkSelectorButton from "@/components/common/NetworkSelectorButton";
+import GlobalStyles from "../components/common/GlobalStyles";
+import TransactionHistoryModal from "../components/common/TransactionHistoryModal";
+import Image from "next/image";
+import { incrementDeploymentCount } from "@/lib/supabase";
+import DeploymentCounter from "@/components/common/DeploymentCounter";
+import Link from "next/link";
 
 interface DeploymentRecord {
   chainId: number;
@@ -121,6 +126,19 @@ export default function Home() {
     }
   }, [config?.state?.chainId]);
 
+  // Clear error message when wallet connects
+  useEffect(() => {
+    if (
+      walletIsConnected &&
+      deploymentState.error === "Please connect your wallet first"
+    ) {
+      setDeploymentState((prev) => ({
+        ...prev,
+        error: null,
+      }));
+    }
+  }, [walletIsConnected, deploymentState.error]);
+
   // Handle chain selection
   const handleChainChange = async (chainId: number) => {
     setSelectedChainId(chainId);
@@ -156,7 +174,7 @@ export default function Home() {
       // If wallet is connected but no chain is selected, use the wallet's chain
       setSelectedChainId(config.state.chainId);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [walletIsConnected, config?.state?.chainId, selectedChainId, switchChain]);
 
   // Log current configuration
@@ -237,7 +255,7 @@ export default function Home() {
       0,
       6
     )}...${contractAddress.slice(-4)}`;
-    
+
     // Create a more engaging message with emojis and call-to-action
     const text = `🚀 Just deployed a ${contractType} on ${chainName} in seconds using @OneClickDeployer! 
     
@@ -275,12 +293,64 @@ Contract: ${shortAddress}`;
     try {
       if (!walletIsConnected) {
         console.log("Wallet not connected");
-        return;
-      }
+        // Set an error in deployment state to show in UI
+      setDeploymentState((prev) => ({
+        ...prev,
+          error: "Please connect your wallet first",
+        }));
+
+        // Find and click the ConnectButton
+        setTimeout(() => {
+          // Try to find the ConnectKitButton
+          const connectKitButton = document.querySelector(
+            "[data-connectkit-button]"
+          );
+          if (connectKitButton instanceof HTMLElement) {
+            connectKitButton.click();
+            console.log("ConnectKit button clicked");
+          } else {
+            // Try various other selectors as fallbacks
+            const buttonSelectors = [
+              "button[variant='ghost']",
+              ".flex.items-center.gap-2.text-indigo-400",
+              "button:has(svg.w-4.h-4)",
+              "button",
+            ];
+
+            for (const selector of buttonSelectors) {
+              try {
+                const button = document.querySelector(selector);
+                if (button instanceof HTMLElement) {
+                  button.click();
+                  console.log(
+                    `Found and clicked button with selector: ${selector}`
+                  );
+                  break;
+                }
+              } catch (e) {
+                console.log(`Error with selector ${selector}:`, e);
+              }
+            }
+          }
+        }, 100);
+      return;
+    }
+
+      // Set loading state at the beginning of deployment
+      setDeploymentState((prev) => ({
+        ...prev,
+        isDeploying: true,
+        error: null,
+      }));
 
       // Properly type the ethereum object
-    if (!window.ethereum) {
+      if (!window.ethereum) {
         console.log("Ethereum provider not available");
+      setDeploymentState((prev) => ({
+        ...prev,
+        isDeploying: false,
+          error: "Ethereum provider not available",
+      }));
       return;
     }
 
@@ -334,10 +404,10 @@ Contract: ${shortAddress}`;
       if (activeTab === "simple") {
         console.log("Creating Simple Contract factory...");
         contractFactory = new ethers.ContractFactory(
-        SimpleContractABI,
-        SimpleContractBytecode,
-        signer
-      );
+          SimpleContractABI,
+          SimpleContractBytecode,
+          signer
+        );
 
         console.log("Deploying Simple Contract with params:", {
           feeReceiver: platformAddress,
@@ -456,6 +526,9 @@ Contract: ${shortAddress}`;
 
         // Open success modal
         setIsSuccessModalOpen(true);
+
+        // Increment deployment count in Supabase
+        incrementDeploymentCount(selectedChainId, currentChain.chainName);
       } else {
         throw new Error("Failed to get contract address or transaction hash");
       }
@@ -485,153 +558,63 @@ Contract: ${shortAddress}`;
     );
   }, [availableChains, searchQuery]);
 
-  // Update the globalStyles to include the animation
-  const globalStyles = `
-    .custom-scrollbar::-webkit-scrollbar {
-      width: 8px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-track {
-      background: rgba(99, 102, 241, 0.1);
-      border-radius: 4px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: rgba(99, 102, 241, 0.3);
-      border-radius: 4px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: rgba(99, 102, 241, 0.5);
-    }
-    
-    .custom-scrollbar-x::-webkit-scrollbar {
-      height: 4px;
-    }
-    .custom-scrollbar-x::-webkit-scrollbar-track {
-      background: rgba(255, 255, 255, 0.03);
-      border-radius: 4px;
-    }
-    .custom-scrollbar-x::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.15);
-      border-radius: 4px;
-    }
-    .custom-scrollbar-x::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.25);
-    }
-    
-    /* Input alanları için otomatik doldurma düzeltmesi */
-    input:-webkit-autofill,
-    input:-webkit-autofill:hover,
-    input:-webkit-autofill:focus,
-    input:-webkit-autofill:active {
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: #a5b4fc; /* indigo-300 text rengi */
-      transition: background-color 5000s ease-in-out 0s;
-      box-shadow: inset 0 0 20px 20px rgba(79, 70, 229, 0.1) !important; /* indigo-600/10 */
-      background: transparent !important;
-      backdrop-filter: blur(10px);
-    }
-    
-    /* Firefox için ayrı düzeltme */
-    input:autofill {
-      background: rgba(79, 70, 229, 0.1) !important; /* indigo-600/10 */
-      color: #a5b4fc !important; /* indigo-300 */
-      border-color: rgba(79, 70, 229, 0.3) !important; /* indigo-600/30 */
-    }
-    
-    @keyframes pulse-slow {
-      0%, 100% {
-        opacity: 0.3;
-      }
-      50% {
-        opacity: 0.6;
-      }
-    }
-    .animate-pulse-slow {
-      animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    
-    @keyframes scaleIn {
-      from { transform: scale(0.9); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
-    }
-  `;
-
   return (
     <div className="dark">
-      <div className="min-h-screen text-gray-100 relative overflow-hidden flex items-center justify-center bg-gradient-to-br from-indigo-950 to-black">
-        {/* Noise texture for background */}
-        <NoiseEffect />
-        
-        {/* Modern background with subtle grid pattern */}
+      <GlobalStyles />
+
+      <div className="min-h-screen text-gray-100 relative overflow-hidden flex items-start sm:items-center justify-center bg-gradient-to-br from-indigo-950 to-black">
         <div className="fixed inset-0 opacity-40 pointer-events-none z-0">
           <GridBackground theme="dark" />
         </div>
 
-        {/* Glowing effects */}
         <div className="fixed top-[-50%] left-[-10%] w-[80%] h-[80%] rounded-full bg-indigo-500/10 blur-3xl pointer-events-none z-0"></div>
         <div className="fixed bottom-[-50%] right-[-20%] w-[80%] h-[80%] rounded-full bg-indigo-600/5 blur-3xl pointer-events-none z-0"></div>
 
-        {/* Main content */}
-        <div className="w-full max-w-3xl mx-auto z-10 px-4 py-8">
-          {/* Logo ve ConnectButton üst kısma alındı */}
-          <div className="flex justify-between items-center mb-8">
-            <div className="font-bold text-2xl">
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-indigo-200">
-                OneClickDeployer
-              </span>
+        <div className="w-full max-w-4xl mx-auto z-10 px-4 pt-4 sm:py-8 flex flex-col">
+          <div className="flex justify-between items-center mb-4 sm:mb-8 mt-2 sm:mt-0">
+              <div className="flex items-center">
+                    <Image
+                src="/logo.png" 
+                alt="OneClick Deployer Logo" 
+                width={80}
+                height={80}
+                className="mr-2 sm:mr-3 w-16 h-16 sm:w-auto sm:h-auto"
+              />
+              <div className="hidden sm:block">
+                <h2 className="text-xl font-bold text-white">
+                  OneClick Deployer
+                </h2>
+                <p className="text-xs text-indigo-300">Deploy in seconds</p>
                   </div>
-            <div className="flex items-center gap-3">
+              </div>
+            <div className="flex items-center gap-2 sm:gap-3">
+                  <DeploymentCounter />
                   <button
                 onClick={() => setIsHistoryOpen(true)}
-                className="flex items-center gap-1 text-indigo-300 hover:text-indigo-200 transition-colors"
+                className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-indigo-500/30 bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-300 hover:text-indigo-200 transition-colors"
                   >
-                <Clock className="w-4 h-4" />
-                <span className="text-sm">History</span>
+                <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="text-xs sm:text-sm font-medium">History</span>
                   </button>
               <ConnectButton />
               </div>
             </div>
 
-          {/* Ana başlık */}
-          <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-indigo-300 mb-3">
-              Smart Contract Deployment Hub
+          <div className="text-center mb-4 sm:mb-8">
+            <h1 className="text-xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-indigo-300 mb-1 sm:mb-3">
+              Blockchain Contract Deployer
             </h1>
-            <p className="text-lg text-indigo-200/90">
-              Deploy blockchain contracts with just a few clicks
+
+            <p className="text-sm sm:text-lg text-indigo-200/90">
+              Instantly deploy ERC20, ERC721 and custom contracts without coding
             </p>
-                  </div>
+          </div>
 
-          {/* Main content container */}
-          <div className="flex flex-col gap-6">
-            {/* Network Selector Card - Ultra Modern Design */}
-            <div className="backdrop-blur-xl  border border-indigo-500/40 rounded-xl overflow-hidden shadow-[0_10px_30px_-15px_rgba(79,70,229,0.3)] transition-all hover:border-indigo-400/50 hover:shadow-[0_15px_40px_-15px_rgba(79,70,229,0.4)]">
-              <div className="p-5">
-                {/* Modern header with animation and status */}
-                <div className="flex items-center mb-4">
-                  <div
-                    className={`h-2 w-2 rounded-full mr-2 ${
-                      walletIsConnected
-                        ? "bg-emerald-400 animate-pulse"
-                        : "bg-amber-400"
-                    }`}
-                  ></div>
-                  <span
-                    className={`text-xs font-medium ${
-                      walletIsConnected ? "text-emerald-300" : "text-amber-300"
-                    }`}
-                  >
-                    {walletIsConnected ? "Wallet Connected" : "Connect Wallet"}
-                                </span>
-                </div>
-
-                {/* Enhanced Network Selector */}
+          <div className="flex flex-col gap-3 sm:gap-4">
+            <div className="backdrop-blur-xl border border-indigo-500/40 rounded-xl overflow-hidden shadow-[0_10px_30px_-15px_rgba(79,70,229,0.3)] transition-all ">
+              <div className="p-2 sm:p-3 md:p-5">
                 <div className="relative">
-                  <NetworkSelectorButton 
+                  <NetworkSelectorButton
                     selectedChainId={selectedChainId}
                     availableChains={availableChains}
                     onClick={() => setNetworkModalOpen(true)}
@@ -640,17 +623,15 @@ Contract: ${shortAddress}`;
                             />
                           </div>
                   </div>
-          </div>
+            </div>
 
-            {/* Contract Card */}
             <div className="backdrop-blur-xl border border-indigo-500/20 rounded-2xl overflow-hidden shadow-2xl">
-              <div className="p-4">
-            {/* Custom Tabs */}
-                <div className="overflow-hidden rounded-xl shadow-xl border border-indigo-500/30 mb-6 backdrop-blur-md">
+              <div className="p-2 sm:p-3 md:p-4">
+                <div className="overflow-hidden rounded-xl shadow-xl border border-indigo-500/30 mb-3 sm:mb-4 md:mb-6 backdrop-blur-md">
               <div className="grid grid-cols-3 relative">
                 <button
                   onClick={() => setActiveTab("simple")}
-                      className={`py-4 px-4 text-sm sm:text-base font-semibold transition-colors ${
+                      className={`py-1.5 sm:py-2 md:py-4 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base font-semibold transition-colors ${
                     activeTab === "simple"
                           ? "text-white bg-indigo-500/30 backdrop-blur-md"
                           : "text-indigo-300 hover:bg-indigo-600/20"
@@ -660,7 +641,7 @@ Contract: ${shortAddress}`;
                 </button>
                 <button
                   onClick={() => setActiveTab("token")}
-                      className={`py-4 px-4 text-sm sm:text-base font-semibold transition-colors ${
+                      className={`py-1.5 sm:py-2 md:py-4 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base font-semibold transition-colors ${
                     activeTab === "token"
                           ? "text-white bg-indigo-500/30 backdrop-blur-md"
                           : "text-indigo-300 hover:bg-indigo-600/20"
@@ -670,7 +651,7 @@ Contract: ${shortAddress}`;
                 </button>
                 <button
                   onClick={() => setActiveTab("nft")}
-                      className={`py-4 px-4 text-sm sm:text-base font-semibold transition-colors ${
+                      className={`py-1.5 sm:py-2 md:py-4 px-1 sm:px-2 md:px-4 text-xs sm:text-sm md:text-base font-semibold transition-colors ${
                     activeTab === "nft"
                           ? "text-white bg-indigo-500/30 backdrop-blur-md"
                           : "text-indigo-300 hover:bg-indigo-600/20"
@@ -681,23 +662,21 @@ Contract: ${shortAddress}`;
               </div>
             </div>
 
-                <div className="backdrop-blur-lg rounded-xl p-5 border border-indigo-500/20 ">
-                  {/* Tab içerikleri buraya gelecek */}
-              {/* Simple Contract Tab */}
+                <div className="backdrop-blur-lg rounded-xl p-2 sm:p-3 md:p-5 border border-indigo-500/20 ">
               {activeTab === "simple" && (
                 <div>
-                      <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-lg font-medium text-gray-300">
+                      <div className="flex justify-between items-center mb-3 sm:mb-4">
+                        <h2 className="text-base sm:text-lg font-medium text-gray-300">
                     Simple Contract
                   </h2>
                         <button
                           onClick={useSimpleContractDefaults}
-                          className="text-xs px-2 py-1 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded border border-indigo-600/30"
+                          className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded border border-indigo-600/30"
                         >
                           Use Default Data
                         </button>
                       </div>
-                  <p className="text-sm text-gray-300/80 mb-4">
+                      <p className="text-xs sm:text-sm text-gray-300/80 mb-3 sm:mb-4">
                         Deploy a basic smart contract with a custom name.
                   </p>
 
@@ -749,7 +728,6 @@ Contract: ${shortAddress}`;
                 </div>
               )}
 
-              {/* Token Contract Tab */}
               {activeTab === "token" && (
                 <div>
                       <div className="flex justify-between items-center mb-4">
@@ -838,7 +816,6 @@ Contract: ${shortAddress}`;
                 </div>
               )}
 
-              {/* NFT Contract Tab */}
               {activeTab === "nft" && (
                 <div>
                       <div className="flex justify-between items-center mb-4">
@@ -926,30 +903,58 @@ Contract: ${shortAddress}`;
                 </div>
               )}
 
-                  {/* Deploy Button - More modern transparent design */}
               <button
-                    className="w-full mt-6 py-4 px-4 rounded-xl font-semibold text-sm sm:text-base text-white backdrop-blur-md border border-indigo-500/40 shadow-[0_4px_20px_rgba(79,70,229,0.15)] bg-gradient-to-r from-indigo-500/20 to-indigo-600/20 hover:from-indigo-500/30 hover:to-indigo-600/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full mt-6 py-4 px-4 rounded-xl font-semibold text-sm sm:text-base text-white backdrop-blur-md border border-indigo-500/40 shadow-[0_4px_20px_rgba(79,70,229,0.15)] bg-gradient-to-r from-indigo-500/20 to-indigo-600/20 hover:from-indigo-500/30 hover:to-indigo-600/30 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                     onClick={handleDeployContract}
                 disabled={deploymentState.isDeploying}
               >
-                {deploymentState.isDeploying
-                  ? "Deploying..."
-                  : `Deploy ${
+                    {deploymentState.isDeploying ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Deploying...</span>
+                      </div>
+                    ) : (
+                      `Deploy ${
                       activeTab === "simple"
                         ? "Simple Contract"
                         : activeTab === "token"
                         ? "Token Contract"
                         : "NFT Contract"
-                    }`}
+                      }`
+                    )}
               </button>
+
+                  {/* Error message display */}
+                  {deploymentState.error && (
+                    <div className="mt-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
+                      <p className="text-red-300 text-sm text-center">
+                        {deploymentState.error}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
+            <span className="flex justify-center items-center gap-2">
+              <Twitter className="w-5 h-5" />
+              <a
+                href="https://x.com/1ClickDeployer"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-indigo-300 hover:text-indigo-200 transition-colors text-sm font-bold"
+              >
+                Follow us on X
+              </a>
+              <span className="mx-1 text-indigo-500/40">|</span>
+              <Link href="/deployment-stats" className="flex items-center gap-1 text-indigo-300 hover:text-indigo-200 transition-colors text-sm font-bold">
+                <BarChart className="w-4 h-4" />
+                <span>View Stats</span>
+              </Link>
+            </span>
           </div>
             </div>
           </div>
 
-      {/* Network Selector Modal */}
       <NetworkSelector
         isOpen={networkModalOpen}
         onClose={() => setNetworkModalOpen(false)}
@@ -1069,110 +1074,21 @@ Contract: ${shortAddress}`;
                   <Twitter className="w-5 h-5" />
                   Share on Twitter
                 </button>
-                <p className="text-xs text-center text-indigo-300/60 mt-2">
-                  Share and get 10% discount on your next deployment
-                </p>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Transaction History Modal */}
-      {isHistoryOpen && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-lg flex items-center justify-center z-50 p-4">
-          <div className="bg-gradient-to-b from-indigo-950/60 to-black/60 backdrop-blur-xl border border-indigo-500/30 rounded-2xl shadow-[0_10px_50px_rgba(99,102,241,0.15)] w-full max-w-2xl p-6 relative">
-            <button
-              onClick={() => setIsHistoryOpen(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <h3 className="text-xl font-bold text-white mb-6">
-              Deployment History
-            </h3>
-
-            {deploymentHistory.length > 0 ? (
-              <div className="overflow-auto max-h-[60vh] custom-scrollbar">
-                <table className="w-full">
-                  <thead className="border-b border-indigo-600/30">
-                    <tr>
-                      <th className="text-left p-3 text-sm font-medium text-gray-300">
-                        Type
-                      </th>
-                      <th className="text-left p-3 text-sm font-medium text-gray-300">
-                        Network
-                      </th>
-                      <th className="text-left p-3 text-sm font-medium text-gray-300">
-                        Address
-                      </th>
-                      <th className="text-left p-3 text-sm font-medium text-gray-300">
-                        Date
-                      </th>
-                      <th className="text-left p-3 text-sm font-medium text-gray-300">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {deploymentHistory.map((record, index) => (
-                      <tr
-                        key={index}
-                        className="border-b border-indigo-600/10 hover:bg-indigo-900/30"
-                      >
-                        <td className="p-3 text-sm text-gray-200">
-                          {record.contractType}
-                        </td>
-                        <td className="p-3 text-sm text-gray-200">
-                          {record.chainName}
-                        </td>
-                        <td className="p-3 text-sm text-gray-200">
-                          <div className="flex items-center gap-1">
-                            <span className="truncate max-w-[100px]">
-                              {record.contractAddress}
-                            </span>
-                            <button
-                              onClick={() =>
-                                copyToClipboard(record.contractAddress)
-                              }
-                              className="text-indigo-400 hover:text-indigo-300"
-                            >
-                              <Copy className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                        <td className="p-3 text-sm text-gray-200">
-                          {formatDate(record.timestamp)}
-                        </td>
-                        <td className="p-3">
-                          <button
-                            onClick={() =>
-                              openInExplorer(record.txHash, record.chainId)
-                            }
-                            className="text-indigo-400 hover:text-indigo-300"
-                          >
-                            <ExternalLink className="w-4 h-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="text-center py-8 text-gray-400">
-                <p>No deployment history yet</p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Custom scrollbar styles */}
-      <style jsx global>
-        {globalStyles}
-      </style>
+      {/* Replace the Transaction History Modal with the imported component */}
+      <TransactionHistoryModal
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        deploymentHistory={deploymentHistory}
+        copyToClipboard={copyToClipboard}
+        openInExplorer={openInExplorer}
+        formatDate={formatDate}
+      />
     </div>
   );
 }

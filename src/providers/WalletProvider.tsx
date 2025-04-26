@@ -63,7 +63,7 @@ const wagmiChains = convertedChains.length > 0
 // Basitleştirilmiş Wagmi yapılandırması
 const config = createConfig(
   getDefaultConfig({
-    appName: "ChainCraft",
+    appName: "OneClickDeploy",
     walletConnectProjectId: WALLETCONNECT_PROJECT_ID,
     chains: wagmiChains,
     transports: Object.fromEntries(
@@ -90,16 +90,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             bufferPolyfill: true,
             walletConnectCTA: "both",
           }}
-          customTheme={{
-            "--ck-connectbutton-background": "rgba(79, 70, 229, 0.1)",
-            "--ck-connectbutton-color": "#6366f1",
-            "--ck-connectbutton-hover-background": "rgba(79, 70, 229, 0.2)",
-            "--ck-body-background": "#000000",
-            "--ck-body-color": "#ffffff",
-            "--ck-primary-button-background": "#4f46e5",
-            "--ck-primary-button-hover-background": "#4338ca",
-            "--ck-border-radius": "12px",
-          }}
+          
         >
           {children}
         </ConnectKitProvider>
