@@ -3,9 +3,8 @@
 import { createConfig, http } from "wagmi";
 import { WagmiConfig } from "wagmi";
 import { ConnectKitProvider, getDefaultConfig } from "connectkit";
-// Comment out the unused import
-// import { injected, walletConnect } from "wagmi/connectors";
-import { injected } from "wagmi/connectors";
+// Re-enable WalletConnect import 
+import { injected, walletConnect } from "wagmi/connectors";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { chains as supportedChains, Chain } from "@/types/chains";
 import { Chain as WagmiChain, mainnet } from "wagmi/chains";
@@ -63,12 +62,10 @@ const wagmiChains = convertedChains.length > 0
   ? [convertedChains[0], ...convertedChains.slice(1)] as [WagmiChain, ...WagmiChain[]] 
   : [mainnet] as [typeof mainnet];
 
-// Comment out the WalletConnect connector to prevent it from being used
-// Create WalletConnect connector but do not use it
-/* 
+// Create WalletConnect connector with specific settings
 const walletConnectConnector = walletConnect({
   projectId: WALLETCONNECT_PROJECT_ID,
-  showQrModal: false, // Explicitly disable QR modal
+  showQrModal: false, // Initially disable QR modal
   metadata: {
     name: "OneClickDeploy",
     description: "Deploy smart contracts with one click",
@@ -76,23 +73,12 @@ const walletConnectConnector = walletConnect({
     icons: [typeof window !== 'undefined' ? `${window.location.origin}/logo.png` : "https://oneclickdeploy.xyz/logo.png"]
   }
 });
-*/
 
-// Configure Wagmi with ConnectKit
-const config = createConfig(
-  getDefaultConfig({
-    appName: "OneClickDeploy",
-    walletConnectProjectId: WALLETCONNECT_PROJECT_ID,
-    chains: wagmiChains,
-    transports: Object.fromEntries(
-      wagmiChains.map((chain) => [chain.id, http()])
-    ),
-    connectors: [
-      injected()
-    ],
-    ssr: false,
-  })
-);
+// Helper to detect mobile device
+const isMobileDevice = () => {
+  if (typeof window === 'undefined') return false;
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+};
 
 // WalletConnectionMonitor function
 const WalletConnectionMonitor = () => {
@@ -240,26 +226,63 @@ const WalletConnectionMonitor = () => {
   return null;
 };
 
+// Configure Wagmi with ConnectKit - include WalletConnect for mobile users
+const config = createConfig(
+  getDefaultConfig({
+    appName: "OneClickDeploy",
+    walletConnectProjectId: WALLETCONNECT_PROJECT_ID,
+    chains: wagmiChains,
+    transports: Object.fromEntries(
+      wagmiChains.map((chain) => [chain.id, http()])
+    ),
+    // Use both injected and WalletConnect for mobile
+    connectors: [
+      injected(),
+      walletConnectConnector
+    ],
+    ssr: false,
+  })
+);
+
 // Wallet connection provider
 export function WalletProvider({ children }: { children: React.ReactNode }) {
-  // Add this useEffect hook to forcefully close WalletConnect modals
+  // Update Modal Control in useEffect
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
-    // Completely remove WalletConnect from the page
-    localStorage.removeItem('wagmi.store');
-    localStorage.removeItem('wagmi.wallet');
-    localStorage.removeItem('walletconnect');
-    localStorage.removeItem('wagmi.connected');
-    localStorage.removeItem('connectKit');
-    sessionStorage.clear();
+    const isMobile = isMobileDevice();
     
-    // Even more aggressive approach - override WalletConnect functions
+    // Different strategies for mobile vs desktop
+    if (isMobile) {
+      // On mobile, be less aggressive with WalletConnect blocking
+      // Just clean storage on load
+      try {
+        localStorage.removeItem('walletconnect');
+        localStorage.removeItem('WALLETCONNECT_DEEPLINK_CHOICE');
+      } catch (e) {
+        console.error("Error clearing WalletConnect data:", e);
+      }
+    } else {
+      // On desktop, be more aggressive with modal blocking
+      // Completely remove WalletConnect from the page
+      localStorage.removeItem('wagmi.store');
+      localStorage.removeItem('wagmi.wallet');
+      localStorage.removeItem('walletconnect');
+      localStorage.removeItem('wagmi.connected');
+      localStorage.removeItem('connectKit');
+      sessionStorage.clear();
+    }
+    
+    // Function that conditionally blocks modals
     const disableWalletConnect = () => {
+      // If user specifically requested the modal, don't block
+      if (window.userInitiatedConnection && isMobile) {
+        return; // Allow WalletConnect on mobile when user initiated
+      }
+      
       // Try to find WalletConnect modal elements
       const wcElements = document.querySelectorAll(
-        '[data-wagmi-modal], [data-connectkit-modal], .wcm-overlay, .wcm-modal, .wcm-container, ' +
-        '[class*="walletconnect"], [class*="WalletConnect"], [id*="walletconnect"], [id*="WalletConnect"]'
+        '[data-wagmi-modal], [data-connectkit-modal], .wcm-overlay, .wcm-modal, .wcm-container'
       );
       
       if (wcElements.length > 0) {
@@ -283,53 +306,56 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       }
     };
     
-    // Run immediately
-    disableWalletConnect();
-    
-    // Run whenever DOM changes
-    const observer = new MutationObserver((mutations) => {
-      let shouldCheck = false;
-      
-      mutations.forEach(mutation => {
-        mutation.addedNodes.forEach(node => {
-          if (node.nodeType === 1) { // ELEMENT_NODE
-            const element = node as Element;
-            if (
-              element.classList.contains('wcm-overlay') ||
-              element.classList.contains('wcm-modal') ||
-              element.classList.contains('ck-overlay') ||
-              element.hasAttribute('data-wagmi-modal') ||
-              element.hasAttribute('data-connectkit-modal')
-            ) {
-              shouldCheck = true;
+    // Run whenever DOM changes - but only for desktop
+    if (!isMobile) {
+      const observer = new MutationObserver((mutations) => {
+        let shouldCheck = false;
+        
+        mutations.forEach(mutation => {
+          mutation.addedNodes.forEach(node => {
+            if (node.nodeType === 1) { // ELEMENT_NODE
+              const element = node as Element;
+              if (
+                element.classList.contains('wcm-overlay') ||
+                element.classList.contains('wcm-modal') ||
+                element.classList.contains('ck-overlay') ||
+                element.hasAttribute('data-wagmi-modal') ||
+                element.hasAttribute('data-connectkit-modal')
+              ) {
+                shouldCheck = true;
+              }
             }
-          }
+          });
         });
+        
+        if (shouldCheck && !window.userInitiatedConnection) {
+          console.log('WalletConnect-related DOM changes detected, cleaning up...');
+          disableWalletConnect();
+        }
       });
       
-      if (shouldCheck) {
-        console.log('WalletConnect-related DOM changes detected, cleaning up...');
-        disableWalletConnect();
-      }
-    });
-    
-    // Start observing
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ['class', 'style']
-    });
-    
-    // Also set an interval as a fallback
-    const checkInterval = setInterval(disableWalletConnect, 500);
-    window.modalKillerInterval = checkInterval;
-    
-    // Clear all on unmount
-    return () => {
-      observer.disconnect();
-      clearInterval(checkInterval);
-    };
+      // Start observing
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['class', 'style']
+      });
+      
+      // Also set an interval as a fallback - but not for mobile
+      const checkInterval = setInterval(() => {
+        if (!window.userInitiatedConnection) {
+          disableWalletConnect();
+        }
+      }, 500);
+      window.modalKillerInterval = checkInterval;
+      
+      // Clear all on unmount
+      return () => {
+        observer.disconnect();
+        clearInterval(checkInterval);
+      };
+    }
   }, []);
   
   return (

@@ -52,7 +52,7 @@ export const SupportedChains: Record<string, Chain> = {
         "https://faucet.trade/monad-testnet-mon-faucet",
       ],
     },
-    isFeeValue: 0.000045,
+    isFeeValue: 0.01,
     isRequireFees: true,
     isPopular: true,
     isSuperchain: false,
