@@ -1,21 +1,26 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Create Supabase server client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Supabase is not configured');
+  }
+
+  return createClient(supabaseUrl, supabaseKey);
+}
 
 export async function GET() {
   try {
-    // Query deployment stats
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('chain_deployments')
       .select('*')
       .order('count', { ascending: false });
     
     if (error) {
-      // If table doesn't exist, return empty array instead of error
       if (error.code === '42P01') {
         console.log('Stats table does not exist yet, returning empty array');
         return NextResponse.json([]);

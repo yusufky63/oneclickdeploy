@@ -1,39 +1,49 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { SupportedChains } from '@/types/chains';
 
-// Create Supabase server client (using environment variables)
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Supabase is not configured');
+  }
+
+  return createClient(supabaseUrl, supabaseKey);
+}
+
+function getSupportedChain(chainId: unknown) {
+  const numericChainId = Number(chainId);
+
+  if (!Number.isInteger(numericChainId)) {
+    return null;
+  }
+
+  return Object.values(SupportedChains).find(
+    (chain) => chain.enabled && chain.chainId === numericChainId
+  ) || null;
+}
 
 export async function POST(request: Request) {
   try {
-    // Parse request body
     const body = await request.json();
-    const { chainId, chainName } = body;
+    const chain = getSupportedChain(body?.chainId);
 
-    if (!chainId || !chainName) {
-      return NextResponse.json({ error: 'Chain ID and name are required' }, { status: 400 });
+    if (!chain) {
+      return NextResponse.json({ error: 'Unsupported chain ID' }, { status: 400 });
     }
 
     try {
-      // First check if the record exists
+      const supabase = getSupabaseClient();
+
       const { data, error: selectError } = await supabase
         .from('chain_deployments')
         .select('count')
-        .eq('chain_id', chainId)
-        .maybeSingle(); // Use maybeSingle() to avoid errors if record doesn't exist
+        .eq('chain_id', chain.chainId)
+        .maybeSingle();
       
-      // Record doesn't exist or there was an error other than "not found"
       if (selectError && selectError.code !== 'PGRST116') {
-        // Check for table not existing error
-        if (selectError.code === '42P01') {
-          console.error('Table chain_deployments does not exist:', selectError);
-          return NextResponse.json({ 
-            error: 'Database table does not exist. Please create it in Supabase with: CREATE TABLE chain_deployments (id SERIAL PRIMARY KEY, chain_id INTEGER NOT NULL UNIQUE, chain_name TEXT NOT NULL, count INTEGER DEFAULT 1, created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(), updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW());'
-          }, { status: 500 });
-        }
-        
         console.error('Error checking for existing record:', selectError);
         return NextResponse.json({ error: 'Failed to check existing data' }, { status: 500 });
       }
@@ -46,19 +56,18 @@ export async function POST(request: Request) {
           .from('chain_deployments')
           .update({ 
             count: data.count + 1,
-            chain_name: chainName, // Update name in case it changed
+            chain_name: chain.chainName,
             updated_at: new Date().toISOString()
           })
-          .eq('chain_id', chainId);
+          .eq('chain_id', chain.chainId);
           
         error = result.error;
       } else {
-        // Record doesn't exist, create new one
         const result = await supabase
           .from('chain_deployments')
           .insert([{ 
-            chain_id: chainId, 
-            chain_name: chainName, 
+            chain_id: chain.chainId,
+            chain_name: chain.chainName,
             count: 1,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
@@ -68,14 +77,6 @@ export async function POST(request: Request) {
       }
       
       if (error) {
-        // If table doesn't exist, provide a helpful error message
-        if (error.code === '42P01') {
-          console.error('Table chain_deployments does not exist:', error);
-          return NextResponse.json({ 
-            error: 'Database table does not exist. Please create it in Supabase with: CREATE TABLE chain_deployments (id SERIAL PRIMARY KEY, chain_id INTEGER NOT NULL UNIQUE, chain_name TEXT NOT NULL, count INTEGER DEFAULT 1, created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(), updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW());'
-          }, { status: 500 });
-        }
-        
         console.error('Error updating deployment count:', error);
         return NextResponse.json({ error: 'Failed to update count' }, { status: 500 });
       }
