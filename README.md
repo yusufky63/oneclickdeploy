@@ -1,186 +1,87 @@
 # OneClick Deployer
 
-<div align="center">
-  <img src="/public/logo.png" alt="OneClick Deployer Logo" width="150" />
-  <h3>Deploy smart contracts with just one click.</h3>
-</div>
+OneClick Deployer is a no-code smart contract deployment tool for launching ERC-20 tokens, ERC-721 NFTs, and simple contract templates across supported EVM networks.
 
-OneClick Deployer is a user-friendly platform that allows you to deploy smart contracts to the blockchain quickly, without any coding knowledge. Perfect for developers, entrepreneurs, and blockchain enthusiasts who want to launch tokens or NFT collections without writing Solidity code.
+It focuses on a creator-friendly deployment flow: choose a contract type, configure fields, connect a wallet, deploy, and track the result.
 
-## 📌 Contents
+## Contents
 
-- [Features](#-features)
-- [Screenshots](#-screenshots)
-- [Contract Types](#️-contract-types)
-- [How It Works](#-how-it-works)
-- [Supported Wallets](#-supported-wallets)
-- [Supported Networks](#-supported-networks)
-- [Development](#-development)
-- [Troubleshooting](#-troubleshooting)
-- [Technologies](#-technologies)
-- [Contributing](#-contributing)
-- [License](#-license)
-- [Contact](#-contact)
+- Features
+- Contract Types
+- How It Works
+- Supported Wallets
+- Supported Networks
+- Development
 
-## 🚀 Features
+## Features
 
-- **One-Click Deployment**: Deploy ERC20 tokens, ERC721 NFTs, and custom smart contracts in seconds
-- **No Coding Required**: Easily create contracts with a user-friendly interface
-- **Multi-Blockchain Support**: Deploy to Ethereum, Polygon, Arbitrum, Optimism, BNB Chain, and other popular blockchains
-- **Mobile Wallet Support**: Connect from mobile devices via WalletConnect
-- **Contract Customization**: Set token name, symbol, supply, and other parameters
-- **Transaction History**: View and manage all your deployment transactions
-- **Deployment Statistics**: View global deployment counts across all chains
-- **Instant Sharing**: Share your deployed contracts on social media
-- **Low Fees**: Complete your transactions with minimal gas fees
+- No-code contract deployment UI.
+- ERC-20 token launch configuration.
+- ERC-721 NFT contract configuration.
+- Multi-chain wallet connection and network selection.
+- Deployment history, stats, and shareable deployment result flow.
+- Supabase-backed persistence for app/deployment data.
 
-## 📷 Screenshots
+## Contract Types
 
-<div align="center">
-  <i>Add screenshots of your application here</i>
-  <p>Visit <a href="https://oneclickdeploy.xyz">oneclickdeploy.xyz</a> to see the platform in action</p>
-</div>
+| Type | Typical fields |
+| --- | --- |
+| ERC-20 Token | Name, symbol, supply, decimals, owner/admin configuration. |
+| ERC-721 NFT | Name, symbol, base URI/metadata, collection settings. |
+| Simple contracts | Lightweight templates for quick EVM deployment experiments. |
 
-## 🛠️ Contract Types
+## How It Works
 
-1. **Simple Contract** 
-   - A basic "Hello World" style smart contract
-   - Useful for learning and testing deployment
-   - No complex features, just a minimal contract
+1. Select a contract template.
+2. Fill the required contract configuration.
+3. Connect a supported wallet.
+4. Confirm deployment transaction on the selected network.
+5. Store and display deployment details for review and sharing.
 
-2. **Token Contract (ERC20)**
-   - Customizable ERC20 standard token
-   - Set name, symbol, and initial supply
-   - Create your own cryptocurrency in seconds
+## Supported Wallets
 
-3. **NFT Contract (ERC721)**
-   - Customizable ERC721 standard NFT collection
-   - Define collection name, symbol, and max supply
-   - Launch your NFT project without coding
+- ConnectKit-compatible wallets.
+- Wagmi/Viem/Ethers compatible injected wallets.
+- WalletConnect-compatible flows depending on runtime configuration.
 
-## 🔍 How It Works
+## Supported Networks
 
-1. **Connect Wallet** - Connect your Web3 wallet (MetaMask, WalletConnect, etc.)
-2. **Select Network** - Choose your target blockchain network
-3. **Choose Contract Type** - Select from simple contract, token, or NFT
-4. **Customize Parameters** - Set name, symbol, supply, etc. based on contract type
-5. **Deploy** - Click the deploy button and confirm the transaction in your wallet
-6. **View & Share** - Once deployed, view your contract details and share with others
+The app is designed for EVM networks and can be configured for mainnets and testnets through wallet/network settings. Keep production and test deployment configuration separate.
 
-The deployment process uses ethers.js to interact with the blockchain and charges a minimal platform fee for each deployment, which can be adjusted per network.
+| Layer | Tools |
+| --- | --- |
+| Frontend | Next.js, React, TypeScript, Tailwind CSS, Radix UI, Lucide React |
+| Wallet/Web3 | ConnectKit, Wagmi, Viem, Ethers, Web3.js |
+| Data | Supabase, React Query |
+| UI Utilities | cmdk, class-variance-authority, tailwind-merge, Radix primitives |
 
-## 📱 Supported Wallets
-
-- **MetaMask** - Browser extension and mobile app
-- **WalletConnect** - For mobile wallets like Trust Wallet and OKX Wallet
-- **Coinbase Wallet** - For Coinbase users
-- **Trust Wallet** - Mobile wallet
-- **Rainbow** - iOS and Android wallet
-- **And many more** EVM-compatible wallets
-
-Mobile wallet support is enhanced with special provider detection to work around common issues with WalletConnect on mobile browsers.
-
-## 🌐 Supported Networks
-
-### Mainnets
-- Ethereum
-- Polygon
-- Arbitrum
-- Optimism
-- BNB Chain
-- Avalanche
-- Base
-- Linea
-- Scroll
-
-### Testnets
-- Monad Testnet
-- Somnia Testnet
-...
-
-
-Each network comes with faucet links and chain information to help users obtain test tokens when needed.
-
-## 💻 Development
+## Development
 
 ### Requirements
 
-- Node.js v18 or higher
-- npm or yarn
+- Node.js and npm.
+- Wallet with test funds for non-production deployment testing.
+- Supabase project/configuration when using persistence features.
 
 ### Installation
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/mini-contract-deployer.git
-cd mini-contract-deployer
-
-# Install dependencies
 npm install
-
-# Start the development server
 npm run dev
 ```
 
-### Environment Variables
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Start the development server. |
+| `npm run build` | Build for production. |
+| `npm start` | Run the production server. |
+| `npm run lint` | Run lint checks. |
 
-Create a `.env.local` file with the following variables:
+## Environment Variables
 
-```
-NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_walletconnect_project_id
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
+Use local environment files for Supabase, wallet, RPC, and deployment-related configuration. Never commit private keys or production secrets.
 
-### Building for Production
+## Status
 
-```bash
-# Create a production build
-npm run build
-
-# Start the production server
-npm start
-```
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-- **"Connect Wallet" button still shows after connecting on mobile** - This has been fixed with enhanced wallet detection for mobile browsers and WalletConnect
-- **"Could not detect Ethereum provider" error on mobile** - The application now uses a robust provider detection system for mobile devices
-- **Transaction rejection errors** - Check that you have sufficient funds for the transaction including gas fees
-- **Network switching issues** - Some wallets may require manual network switching
-
-For OKX Wallet and other mobile wallets, special fallback mechanisms have been implemented to ensure smooth operation.
-
-## 🧑‍💻 Technologies
-
-- **Next.js 13 App Router** - Modern React framework with server components
-- **TypeScript** - For type safety and better developer experience
-- **Tailwind CSS** - For responsive and beautiful UI components
-- **ethers.js** - For blockchain interactions and contract deployment
-- **wagmi** - React hooks for Ethereum
-- **ConnectKit** - For wallet connection UI
-- **WalletConnect** - For connecting mobile wallets
-- **Supabase** - For tracking deployment statistics
-
-## 👥 Contributing
-
-Contributions are welcome! Here's how you can contribute:
-
-1. Fork the repository
-2. Create a new branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Commit your changes (`git commit -m 'Add some amazing feature'`)
-5. Push to the branch (`git push origin feature/amazing-feature`)
-6. Open a Pull Request
-
-## 📄 License
-
-MIT
-
-## 📞 Contact
-
-- Twitter: [@1ClickDeployer](https://x.com/1ClickDeployer)
-- Website: [oneclickdeploy.xyz](https://oneclickdeploy.xyz)
-- Email: contact@oneclickdeploy.xyz
+- Repository: https://github.com/yusufky63/oneclickdeploy
+- Live app: https://oneclickdeploy-flame.vercel.app
