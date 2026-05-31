@@ -1,28 +1,41 @@
 # OneClick Deployer
 
-![Category](https://img.shields.io/badge/Category-Smart%20Contract%20Deployment-1f1f1f?style=flat-square&labelColor=141414&color=2b2b2b) ![Status](https://img.shields.io/badge/Status-public-1f1f1f?style=flat-square&labelColor=141414&color=2b2b2b)
+OneClick Deployer is a no-code smart contract deployment tool for launching ERC-20 tokens, ERC-721 NFTs, and simple contracts across supported chains.
 
-No-code smart contract deployment tool for launching ERC-20 tokens, ERC-721 NFTs, and simple contracts across chains.
+## Snapshot
 
-## Links
+- **Category:** No-code smart contract deployment
+- **Status:** Public repository
+- **Live:** https://oneclickdeploy-flame.vercel.app
+- **Repository:** https://github.com/yusufky63/oneclickdeploy
+- **Portfolio:** https://codexsha.dev
 
-- Live: https://oneclickdeploy-flame.vercel.app
-- Repository: https://github.com/yusufky63/oneclickdeploy
-- Portfolio: https://codexsha.dev
+## Product Scope
 
-## Overview
+OneClick Deployer is documented here as a product repository, not just a code dump. The goal of this README is to make the product purpose, runtime surface, and development path clear for future review and maintenance.
 
-OneClick Deployer is part of the Codexsha product portfolio. The project is focused on shipping a compact, usable product surface rather than a demo-only prototype. This README is written to make the repository easier to understand, run, and evaluate.
-
-## Key Features
+## Core Capabilities
 
 - No-code ERC-20 and ERC-721 deployment
 - Multi-chain wallet connection
 - Deployment history and statistics
 - Shareable contract launch flow
-- Clean deployment-oriented product UI
+- Supported wallet and network documentation
 
-## Stack
+## Existing README Coverage Preserved
+
+This refresh keeps the important project-specific areas from the previous documentation:
+
+- Contents
+- Features
+- Screenshots
+- Contract Types
+- How It Works
+- Supported Wallets
+- Supported Networks
+- Development
+
+## Tech Stack
 
 - Next.js
 - TypeScript
@@ -34,33 +47,37 @@ OneClick Deployer is part of the Codexsha product portfolio. The project is focu
 - Radix UI
 - Web3.js
 
-## Role / Ownership
+## Repository Map
 
-Built the no-code deployment interface, wallet flow, contract configuration UI, and deployment tracking surface.
+| Path | Purpose |
+| --- | --- |
+| src/app/ | App routes and deployment flows |
+| src/components/ | Contract form and wallet UI |
+| src/lib/ | Contract deployment/Web3 helpers |
+| public/ | Logo and browser assets |
 
-## Getting Started
+## Local Development
 
-```bash
-npm install
-npm run dev
-npm run build
-```
+| Command | Purpose |
+| --- | --- |
+| npm run dev | Run local dev server |
+| npm run build | Build production app |
+| npm run start | Start production server |
+| npm run lint | Run lint checks |
 
-## Environment
+## Environment Notes
 
-Create a local environment file from the project conventions and configure only the values needed for the flow you are running. Do not commit secrets.
-
-Typical values used by this project include:
+Use local environment files for secrets and deployment-specific values. Do not commit real keys.
 
 - Supabase credentials
-- wallet connector configuration
+- Wallet connector configuration
 - RPC/provider URLs
 
-## Project Notes
+## Operational Notes
 
-- Status: Public repository and live deployment.
-- Private or sensitive implementation details are intentionally not documented in public-facing copy.
-- The README should stay aligned with the live product and the Codexsha portfolio page.
+- Keep this README aligned with the live product and portfolio copy.
+- Prefer small, documented changes over large undocumented rewrites.
+- This keeps the useful contract/network focus from the old README while making setup and ownership clearer.
 
 ## Maintainer
 
