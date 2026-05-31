@@ -1,88 +1,87 @@
 # OneClick Deployer
 
-OneClick Deployer is a no-code smart contract deployment tool for launching ERC-20 tokens, ERC-721 NFTs, and simple contracts across supported chains.
+OneClick Deployer is a no-code smart contract deployment tool for launching ERC-20 tokens, ERC-721 NFTs, and simple contract templates across supported EVM networks.
 
-## Snapshot
+It focuses on a creator-friendly deployment flow: choose a contract type, configure fields, connect a wallet, deploy, and track the result.
 
-- **Category:** No-code smart contract deployment
-- **Status:** Public repository
-- **Live:** https://oneclickdeploy-flame.vercel.app
-- **Repository:** https://github.com/yusufky63/oneclickdeploy
-- **Portfolio:** https://codexsha.dev
+## Contents
 
-## Product Scope
-
-OneClick Deployer is documented here as a product repository, not just a code dump. The goal of this README is to make the product purpose, runtime surface, and development path clear for future review and maintenance.
-
-## Core Capabilities
-
-- No-code ERC-20 and ERC-721 deployment
-- Multi-chain wallet connection
-- Deployment history and statistics
-- Shareable contract launch flow
-- Supported wallet and network documentation
-
-## Existing README Coverage Preserved
-
-This refresh keeps the important project-specific areas from the previous documentation:
-
-- Contents
 - Features
-- Screenshots
 - Contract Types
 - How It Works
 - Supported Wallets
 - Supported Networks
 - Development
 
-## Tech Stack
+## Features
 
-- Next.js
-- TypeScript
-- Ethers
-- Wagmi
-- Viem
-- Supabase
-- ConnectKit
-- Radix UI
-- Web3.js
+- No-code contract deployment UI.
+- ERC-20 token launch configuration.
+- ERC-721 NFT contract configuration.
+- Multi-chain wallet connection and network selection.
+- Deployment history, stats, and shareable deployment result flow.
+- Supabase-backed persistence for app/deployment data.
 
-## Repository Map
+## Contract Types
 
-| Path | Purpose |
+| Type | Typical fields |
 | --- | --- |
-| src/app/ | App routes and deployment flows |
-| src/components/ | Contract form and wallet UI |
-| src/lib/ | Contract deployment/Web3 helpers |
-| public/ | Logo and browser assets |
+| ERC-20 Token | Name, symbol, supply, decimals, owner/admin configuration. |
+| ERC-721 NFT | Name, symbol, base URI/metadata, collection settings. |
+| Simple contracts | Lightweight templates for quick EVM deployment experiments. |
 
-## Local Development
+## How It Works
+
+1. Select a contract template.
+2. Fill the required contract configuration.
+3. Connect a supported wallet.
+4. Confirm deployment transaction on the selected network.
+5. Store and display deployment details for review and sharing.
+
+## Supported Wallets
+
+- ConnectKit-compatible wallets.
+- Wagmi/Viem/Ethers compatible injected wallets.
+- WalletConnect-compatible flows depending on runtime configuration.
+
+## Supported Networks
+
+The app is designed for EVM networks and can be configured for mainnets and testnets through wallet/network settings. Keep production and test deployment configuration separate.
+
+| Layer | Tools |
+| --- | --- |
+| Frontend | Next.js, React, TypeScript, Tailwind CSS, Radix UI, Lucide React |
+| Wallet/Web3 | ConnectKit, Wagmi, Viem, Ethers, Web3.js |
+| Data | Supabase, React Query |
+| UI Utilities | cmdk, class-variance-authority, tailwind-merge, Radix primitives |
+
+## Development
+
+### Requirements
+
+- Node.js and npm.
+- Wallet with test funds for non-production deployment testing.
+- Supabase project/configuration when using persistence features.
+
+### Installation
+
+```bash
+npm install
+npm run dev
+```
 
 | Command | Purpose |
 | --- | --- |
-| npm run dev | Run local dev server |
-| npm run build | Build production app |
-| npm run start | Start production server |
-| npm run lint | Run lint checks |
+| `npm run dev` | Start the development server. |
+| `npm run build` | Build for production. |
+| `npm start` | Run the production server. |
+| `npm run lint` | Run lint checks. |
 
-## Environment Notes
+## Environment Variables
 
-Use local environment files for secrets and deployment-specific values. Do not commit real keys.
+Use local environment files for Supabase, wallet, RPC, and deployment-related configuration. Never commit private keys or production secrets.
 
-- Supabase credentials
-- Wallet connector configuration
-- RPC/provider URLs
+## Status
 
-## Operational Notes
-
-- Keep this README aligned with the live product and portfolio copy.
-- Prefer small, documented changes over large undocumented rewrites.
-- This keeps the useful contract/network focus from the old README while making setup and ownership clearer.
-
-## Maintainer
-
-Built by Yusuf / Codexsha.
-
-- GitHub: https://github.com/yusufky63
-- X: https://x.com/codexsha
-- Telegram: https://t.me/codexsha
+- Repository: https://github.com/yusufky63/oneclickdeploy
+- Live app: https://oneclickdeploy-flame.vercel.app
